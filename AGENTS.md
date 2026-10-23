@@ -2,6 +2,12 @@
 
 ## Repository purpose
 
+> **This repo is `chrismfz/php`** (renamed from `chrismfz/php7`; GitHub redirects
+> the old url). It is meant to become the one home for every source-built legacy
+> PHP: today it builds 7.0–7.3; 5.6 and 5.3 move in later as `patches/56/` and
+> `patches/53/` on pristine tarballs. Until then they stay in `chrismfz/php53` and
+> `chrismfz/php56`.
+
 This repository builds the end-of-life **PHP 7.0 / 7.1 / 7.2 / 7.3** runtimes for
 NGM, security-patched and kept buildable on current Linux, past upstream EOL.
 

@@ -1,5 +1,11 @@
 # PHP 7.x for NGM — security-patched, source-built
 
+> **This repo is `chrismfz/php`** (renamed from `chrismfz/php7`; GitHub redirects
+> the old url). It is meant to become the one home for every source-built legacy
+> PHP: today it builds 7.0–7.3; 5.6 and 5.3 move in later as `patches/56/` and
+> `patches/53/` on pristine tarballs. Until then they stay in `chrismfz/php53` and
+> `chrismfz/php56`.
+
 One builder for the end-of-life **PHP 7.0 / 7.1 / 7.2 / 7.3** runtimes NGM
 compiles and runs past php.net's EOL. Neither Remi (EL starts at 7.4) nor — on
 EL — anyone else packages these, so NGM builds them from source into
@@ -88,7 +94,7 @@ git diff patches/73/
 The private **OpenSSL** is pinned the same way (`build.sh`: `OPENSSL_VERSION` +
 `OPENSSL_SHA256`, currently the latest **3.5 LTS**) — deliberately not "latest at
 build time": pinning keeps the build reproducible, lets the tarball be
-sha256-verified before it touches the crypto path, and keeps php53/php56/php7
+sha256-verified before it touches the crypto path, and keeps php53/php56/php
 agreeing on the ONE shared `/opt/ngm/php/openssl-3.5` prefix. To learn when a newer
 3.5 LTS ships, run **`./tools/check-deps.py`** (detection only; `--bump` rewrites
 the two pin lines for review). curl and libmcrypt are sha-pinned too.
