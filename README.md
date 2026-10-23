@@ -96,8 +96,15 @@ The private **OpenSSL** is pinned the same way (`build.sh`: `OPENSSL_VERSION` +
 build time": pinning keeps the build reproducible, lets the tarball be
 sha256-verified before it touches the crypto path, and keeps php53/php56/php
 agreeing on the ONE shared `/opt/ngm/php/openssl-3.5` prefix. To learn when a newer
-3.5 LTS ships, run **`./tools/check-deps.py`** (detection only; `--bump` rewrites
-the two pin lines for review). curl and libmcrypt are sha-pinned too.
+3.5 LTS ships, run **`./tools/check-deps.py`**. curl and libmcrypt are sha-pinned
+too.
+
+**Dependency watch.** `tools/check-deps.py` checks every pinned input against
+upstream: the OpenSSL 3.5 LTS, curl, Snuffleupagus and the CloudLinux SRPM series
+per minor. It only reports by default; `--bump` rewrites the pins and re-imports a
+newer series for review. The weekly Action `.github/workflows/check-deps.yml` runs
+`--bump` and opens (or refreshes) one `deps/auto-update` PR. Detection is
+automatic, adoption is a reviewed merge after a host build.
 
 ## Status
 
