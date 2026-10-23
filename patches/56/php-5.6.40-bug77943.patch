@@ -1,0 +1,69 @@
+commit cd94cf60a2379ccfe4619b1b9384a68b3e7a1205
+Author: Christoph M. Becker <cmbecker69@gmx.de>
+Date:   Mon Apr 29 16:14:26 2019 +0200
+
+    Fix #77943: imageantialias($image, false); does not work
+    
+    Firstly, we must not call `gdImageSetAntiAliased()` (which sets the
+    color to anti-alias), but rather modify the `gdImage.AA` flag.
+    Furthermore, we have to actually use the supplied boolean value.
+    
+    We also make sure that we don't attempt to enable anti-aliasing for
+    palette images.
+
+diff --git a/ext/gd/gd.c b/ext/gd/gd.c
+index 50d4745..231fcac 100644
+--- a/ext/gd/gd.c
++++ b/ext/gd/gd.c
+@@ -4699,7 +4699,11 @@ PHP_FUNCTION(imageantialias)
+ 	}
+ 
+ 	ZEND_FETCH_RESOURCE(im, gdImagePtr, &IM, -1, "Image", le_gd);
+-	gdImageAntialias(im, alias);
++
++	if (im->trueColor) {
++		im->AA = alias;
++	}
++
+ 	RETURN_TRUE;
+ }
+ /* }}} */
+diff --git a/ext/gd/tests/bug77943.phpt b/ext/gd/tests/bug77943.phpt
+new file mode 100644
+index 0000000..1009b3e
+--- /dev/null
++++ b/ext/gd/tests/bug77943.phpt
+@@ -0,0 +1,29 @@
++--TEST--
++Bug #77943 (imageantialias($image, false); does not work)
++--SKIPIF--
++<?php
++if (!extension_loaded('gd')) die('skip gd extension not available');
++?>
++--FILE--
++<?php
++require_once __DIR__ . '/func.inc';
++
++$width = 400;
++$height = 300;
++$im = imagecreatetruecolor($width, $height);
++$white = imagecolorallocate($im, 255, 255, 255);
++$blue = imagecolorallocate($im, 0, 0, 255);
++
++imageantialias($im, false);
++imagefilledrectangle($im, 0, 0, $width-1, $height-1, $white);
++
++imageline($im, 0, 0, $width, $height, $blue);
++imagesetthickness($im, 3);
++imageline($im, 10, 0, $width, $height-10, $blue);
++
++test_image_equals_file(__DIR__ . '/bug77943.png', $im);
++?>
++===DONE===
++--EXPECT--
++The images are equal.
++===DONE===
+diff --git a/ext/gd/tests/bug77943.png b/ext/gd/tests/bug77943.png
+new file mode 100644
+index 0000000..6eae56c
+Binary files /dev/null and b/ext/gd/tests/bug77943.png differ

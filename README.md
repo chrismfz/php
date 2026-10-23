@@ -1,30 +1,30 @@
-# PHP 7.x for NGM — security-patched, source-built
+# Legacy PHP for NGM — security-patched, source-built
 
 > **This repo is `chrismfz/php`** (renamed from `chrismfz/php7`; GitHub redirects
-> the old url). It is meant to become the one home for every source-built legacy
-> PHP: today it builds 7.0–7.3; 5.6 and 5.3 move in later as `patches/56/` and
-> `patches/53/` on pristine tarballs. Until then they stay in `chrismfz/php53` and
-> `chrismfz/php56`.
+> the old url), the one home for every source-built legacy PHP. It builds **5.6**
+> and **7.0–7.3** today (5.6 moved in from the retired `chrismfz/php56` fork);
+> 5.3 follows as `patches/53/` on its pristine tarball and stays in
+> `chrismfz/php53` until then.
 
-One builder for the end-of-life **PHP 7.0 / 7.1 / 7.2 / 7.3** runtimes NGM
+One builder for the end-of-life **PHP 5.6 / 7.0 / 7.1 / 7.2 / 7.3** runtimes NGM
 compiles and runs past php.net's EOL. Neither Remi (EL starts at 7.4) nor — on
 EL — anyone else packages these, so NGM builds them from source into
 `/opt/ngm/php/<minor>` and auto-discovers the result. On Debian these come from
 Sury; this tree is for the EL gap.
 
-Unlike the 5.x trees (`chrismfz/php53`, `chrismfz/php56`), which each **are** a
-PHP source fork, this repo carries only:
+This repo carries no PHP source, only:
 
-- **`build.sh`** — one version-parameterized builder (`PHP_MINOR=7.0|7.1|7.2|7.3`,
-  default 7.3);
+- **`build.sh`** — one version-parameterized builder
+  (`PHP_MINOR=5.6|7.0|7.1|7.2|7.3`, default 7.3);
 - **`patches/<nn>/`** — the CloudLinux security series per minor;
 - **`patches-local/<nn>/`** — our hand-maintained overlay per minor;
 - **`ioncube/`** — the bundled ionCube loaders;
-- **`tools/`** — the deterministic patch importer.
+- **`tools/`** — the deterministic patch importer and `check-deps.py`;
+- **`deploy-cpanel.sh`** — packages 5.6 as a cPanel vendor SCL RPM.
 
 The PHP source itself is the **pristine php.net release tarball**, fetched and
 patched at build time — exactly how CloudLinux's own SRPM is shaped, and the only
-sane way to serve four minors from one repo.
+sane way to serve many minors from one repo.
 
 Each build produces, all under `/opt/ngm/php` and baked in by RPATH so they never
 collide with the host:
@@ -34,8 +34,9 @@ collide with the host:
 - a **GnuTLS libcurl** (so `ext/curl` can't drag a second OpenSSL into the
   process);
 - the bundled **ionCube** loader and **Zend OPcache**;
-- for **7.0 / 7.1** only, a private **libmcrypt** (`ext/mcrypt` was removed from
-  core in 7.2).
+- for **5.6 / 7.0 / 7.1** only, a private **libmcrypt** (`ext/mcrypt` was removed
+  from core in 7.2); **5.6** also builds the old `mysql` extension (on mysqlnd).
+  Snuffleupagus needs 7.0+, so 5.6 refuses `ENABLE_SNUFFLEUPAGUS=1`.
 
 NGM auto-discovers the result at `/opt/ngm/php/<minor>/sbin/php-fpm`; nothing else
 on the host is touched.
@@ -48,6 +49,7 @@ sudo ./build.sh
 
 # any other minor
 sudo PHP_MINOR=7.2 ./build.sh
+sudo PHP_MINOR=5.6 ./build.sh
 ```
 
 Useful env: `APPLY_PATCHES=0` builds pristine (no security series);
@@ -56,8 +58,33 @@ Useful env: `APPLY_PATCHES=0` builds pristine (no security series);
 `RUN_REGRESSION_TESTS=0` skips the post-build suite;
 `PHP_RELEASE=7.3.33` pins an exact patch release.
 
-The default patch releases are the last of each line: **7.0.33, 7.1.33, 7.2.34,
-7.3.33.**
+The default patch releases are the last of each line: **5.6.40, 7.0.33, 7.1.33,
+7.2.34, 7.3.33.**
+
+## Our own patches (`patches-local/<nn>/*.patch`)
+
+Anything WE change in PHP's source — a backport CloudLinux doesn't ship (yet), a
+fix of our own, a hardening, a build-compat change — is a separate, named patch in
+`patches-local/<nn>/`, never an edit of the source and never a `sed` in `build.sh`.
+The importer never touches that directory, so these survive every refresh. The
+rules that keep it maintainable:
+
+- **Name by kind:** `CVE-YYYY-NNNN.patch` (an upstream backport), `ngm-fix-<topic>`,
+  `ngm-hardening-<topic>`, `ngm-compat-<topic>`.
+- **One change per patch.** Easy to drop, rebase, or port to another minor.
+- **A header in every patch:** what and why; provenance (upstream sha, ticket, or
+  "ours"); whether customers see a behaviour change; and **when it can be deleted**
+  (e.g. "once CloudLinux ships it", "with 5.6").
+- **Applied after the CloudLinux series** (`build.sh` does this); a refresh that
+  makes one conflict fails the build loudly instead of half-applying.
+- **Behaviour-changing hardening sits behind an ini switch** with a safe default,
+  so one customer can be exempted without a rebuild.
+- **Prefer no C at all:** an ini default, a Snuffleupagus rule (7.x) or an ngm slice
+  property needs no rebuild and no rebase. A C patch is code we maintain forever.
+
+Work on them in a real tree: pristine tarball (= upstream tag `php-X.Y.Z`) + the
+series as commits, so `git cherry-pick -x <php-src sha>` does a 3-way merge; then
+`git format-patch` the result into `patches-local/<nn>/`.
 
 ## Security patches — where they come from
 
@@ -121,6 +148,13 @@ OpenSSL 3.5.9 + Snuffleupagus 0.14.0 and the 2026-10-23 CloudLinux refresh below
 those are apply-verified on the pristine tarballs, host build pending. Every
 dependency tarball (OpenSSL / curl / libmcrypt) and every PHP release is now
 **sha256-pinned and verified at build time**.
+
+**5.6 source:** from `ea-php56-php-5.6.40-25.el8.cloudlinux.18` — 183 of 218
+applied patches kept, plus CloudLinux's OpenSSL 1.1 port and OpenSSL 3.0 follow-up
+force-kept (`patches-local/56/include`); 49 CVEs. On the pristine 5.6.40 tarball the
+whole series applies with **no rejects and no excludes** — the 40 excludes the old
+`chrismfz/php56` fork needed existed only because its boogermann base already held
+those fixes in another shape.
 
 **7.3 source:** from `ea-php73-php-7.3.33-15.el8.cloudlinux.18`. Of 114 applied
 CloudLinux patches, 80 are kept in the series and 1 (CVE-2017-9118) is rebased in

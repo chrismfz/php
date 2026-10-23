@@ -1,0 +1,4 @@
+srpm_filename	ea-php56-php-5.6.40-25.el8.cloudlinux.18.src.rpm
+srpm_sha256	37bdfc8c8c98db23c6eb8fedddf98695902fba1fc69f8b808ea20baeba181449
+srpm_release	25.el8.cloudlinux.18
+source_url	https://repo.cloudlinux.com/cloudlinux/EA4/8.1/updates/src/ea-php56-php-5.6.40-25.el8.cloudlinux.18.src.rpm

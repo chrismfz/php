@@ -3,20 +3,19 @@
 ## Repository purpose
 
 > **This repo is `chrismfz/php`** (renamed from `chrismfz/php7`; GitHub redirects
-> the old url). It is meant to become the one home for every source-built legacy
-> PHP: today it builds 7.0–7.3; 5.6 and 5.3 move in later as `patches/56/` and
-> `patches/53/` on pristine tarballs. Until then they stay in `chrismfz/php53` and
-> `chrismfz/php56`.
+> the old url), the one home for every source-built legacy PHP. It builds **5.6**
+> and **7.0–7.3** today (5.6 moved in from the retired `chrismfz/php56` fork);
+> 5.3 follows as `patches/53/` on its pristine tarball and stays in
+> `chrismfz/php53` until then.
 
-This repository builds the end-of-life **PHP 7.0 / 7.1 / 7.2 / 7.3** runtimes for
-NGM, security-patched and kept buildable on current Linux, past upstream EOL.
+This repository builds the end-of-life **PHP 5.6 / 7.0 / 7.1 / 7.2 / 7.3** runtimes
+for NGM, security-patched and kept buildable on current Linux, past upstream EOL.
 
-Unlike `chrismfz/php53` and `chrismfz/php56` — which **are** a forked PHP source
-tree — this repo carries **no PHP source**. One version-parameterised builder
-(`build.sh`, pick the minor with `PHP_MINOR=7.0|7.1|7.2|7.3`) fetches the **pristine
-php.net release tarball** and applies a CloudLinux-derived patch series on top. That
-is the only sane way to serve four minors from one repo, and it mirrors how
-CloudLinux's own SRPM is shaped.
+It carries **no PHP source**. One version-parameterised builder (`build.sh`, pick
+the minor with `PHP_MINOR=5.6|7.0|7.1|7.2|7.3`) fetches the **pristine php.net
+release tarball** and applies a CloudLinux-derived patch series on top. That is the
+only sane way to serve many minors from one repo, and it mirrors how CloudLinux's
+own SRPM is shaped. (`chrismfz/php53` is still a source fork until 5.3 moves in.)
 
 ## Where fixes live (this repo's model)
 
@@ -33,9 +32,9 @@ CloudLinux's own SRPM is shaped.
   - `*.patch` — our own adaptations (e.g. `CVE-2017-9118` rebased for the pristine
     7.x base, whose upstream copy's `ZSTR_MAX_LEN` deletion hunk doesn't apply).
 - A genuine new source fix that is NOT a CloudLinux backport goes in
-  `patches-local/<nn>/*.patch` with provenance in the commit message — not in
-  `build.sh` via `sed`/text rewriting. Build-time source rewriting is for
-  investigation only.
+  `patches-local/<nn>/*.patch` — not in `build.sh` via `sed`/text rewriting.
+  Build-time source rewriting is for investigation only. Follow the naming, header
+  and one-change-per-patch rules in README.md → "Our own patches".
 
 To change the security series, refresh from a newer SRPM and review the delta:
 
@@ -54,7 +53,7 @@ Validate the apply **without a host** first: extract the pristine tarball, repla
 prefixes, compiler flags, configure options, installation layout, provider
 provisioning, runtime linkage checks, and applying the patch series. It is NOT the
 canonical store for source fixes. The private build dependencies (OpenSSL, curl,
-libmcrypt — the last only for 7.0/7.1) are **version-pinned and sha256-verified**;
+libmcrypt — the last only for 5.6/7.0/7.1) are **version-pinned and sha256-verified**;
 `tools/check-deps.py` reports when any pin is behind (OpenSSL 3.5 LTS, curl,
 Snuffleupagus, the CloudLinux SRPM per minor); the weekly `check-deps` Action opens a
 `deps/auto-update` PR with `--bump`'s diff. Review it like any refresh: validate the

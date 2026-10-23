@@ -1,0 +1,22 @@
+commit c8a90606c186cc746b717777b4adb20a515e6afd
+Author: Jay Bonci <jay@bonci.net>
+Date:   Mon Aug 6 06:14:11 2018 +0200
+
+    Fix bug #65988: Zlib version check fails
+    
+    When an 'include/zlib/' style dir is passed to --with-zlib configure
+    option the zlib version check fails.
+
+diff --git a/ext/zlib/config0.m4 b/ext/zlib/config0.m4
+index ab94c15..276c289 100644
+--- a/ext/zlib/config0.m4
++++ b/ext/zlib/config0.m4
+@@ -42,7 +42,7 @@ if test "$PHP_ZLIB" != "no" || test "$PHP_ZLIB_DIR" != "no"; then
+   esac
+ 
+   AC_MSG_CHECKING([for zlib version >= 1.2.0.4])
+-  ZLIB_VERSION=`$EGREP "define ZLIB_VERSION" $ZLIB_DIR/include/zlib.h | $SED -e 's/[[^0-9\.]]//g'`
++  ZLIB_VERSION=`$EGREP "define ZLIB_VERSION" $ZLIB_INCDIR/zlib.h | $SED -e 's/[[^0-9\.]]//g'`
+   AC_MSG_RESULT([$ZLIB_VERSION])
+   if test `echo $ZLIB_VERSION | $SED -e 's/[[^0-9]]/ /g' | $AWK '{print $1*1000000 + $2*10000 + $3*100 + $4}'` -lt 1020004; then
+     AC_MSG_ERROR([libz version greater or equal to 1.2.0.4 required])

@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 #
-# build.sh — build a legacy PHP 7.x (7.0/7.1/7.2/7.3) for NGM, patched.
+# build.sh — build a legacy PHP (5.6, 7.0/7.1/7.2/7.3) for NGM, patched.
 #
-# One builder, one repo, four minors. Pick the minor with PHP_MINOR (default
-# 7.3 — the closest to the still-packaged 7.4 and therefore the easiest):
+# One builder, one repo, every source-built minor. Pick it with PHP_MINOR
+# (default 7.3 — the closest to the still-packaged 7.4 and therefore the easiest):
 #
 #   sudo PHP_MINOR=7.3 ./build.sh
 #
@@ -14,16 +14,15 @@
 #   OpenSSL 3.5.x: /opt/ngm/php/openssl-3.5   (legacy provider on)
 #   curl (GnuTLS): /opt/ngm/php/curl-gnutls   (so ext/curl can't drag a second
 #                                              OpenSSL into the process)
-#   libmcrypt:     /opt/ngm/php/libmcrypt      (only 7.0/7.1 — removed in 7.2)
+#   libmcrypt:     /opt/ngm/php/libmcrypt      (5.6/7.0/7.1 — removed in 7.2)
 #
-# Unlike the 5.x trees (which ARE a source fork), this repo carries only the
-# builder + the CloudLinux patch series + the ionCube loaders. The PHP source is
-# the PRISTINE php.net release tarball, fetched here and patched at build time —
-# exactly how CloudLinux's own SRPM is shaped, and the only sane way to serve
-# four minors from one repo.
+# This repo carries only the builder + the CloudLinux patch series + our own
+# patches + the ionCube loaders. The PHP source is the PRISTINE php.net release
+# tarball, fetched here and patched at build time — exactly how CloudLinux's own
+# SRPM is shaped, and the only sane way to serve many minors from one repo.
 #
 # Env knobs:
-#   PHP_MINOR=7.0|7.1|7.2|7.3   which minor to build (default 7.3)
+#   PHP_MINOR=5.6|7.0|7.1|7.2|7.3  which minor to build (default 7.3)
 #   PHP_RELEASE=7.3.33          pin an exact patch release (default: newest known)
 #   FORCE=1                     rebuild PHP even if the prefix already exists
 #   FORCE_DEPS=1                also rebuild the shared OpenSSL/curl/libmcrypt
@@ -43,11 +42,12 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 PHP_MINOR="${PHP_MINOR:-7.3}"
 case "$PHP_MINOR" in
+  5.6) PHP_RELEASE_DEFAULT="5.6.40" ;;
   7.0) PHP_RELEASE_DEFAULT="7.0.33" ;;
   7.1) PHP_RELEASE_DEFAULT="7.1.33" ;;
   7.2) PHP_RELEASE_DEFAULT="7.2.34" ;;
   7.3) PHP_RELEASE_DEFAULT="7.3.33" ;;
-  *)   echo "ERROR: unsupported PHP_MINOR '${PHP_MINOR}' (expected 7.0|7.1|7.2|7.3)" >&2; exit 2 ;;
+  *)   echo "ERROR: unsupported PHP_MINOR '${PHP_MINOR}' (expected 5.6|7.0|7.1|7.2|7.3)" >&2; exit 2 ;;
 esac
 PHP_SERIES="$PHP_MINOR"
 PHP_RELEASE="${PHP_RELEASE:-$PHP_RELEASE_DEFAULT}"
@@ -56,13 +56,19 @@ PHP_MINOR_NODOT="${PHP_MINOR//./}"        # 7.3 -> 73 (patch-series dir + import
 # mcrypt was deprecated in 7.1 and REMOVED from core in 7.2 — only build/link it
 # where the extension still exists.
 USE_MCRYPT=0
-case "$PHP_MINOR" in 7.0|7.1) USE_MCRYPT=1 ;; esac
+case "$PHP_MINOR" in 5.6|7.0|7.1) USE_MCRYPT=1 ;; esac
+
+# PHP 5: the old `mysql` extension still exists (removed in 7.0) and customers'
+# code still calls mysql_*(), so 5.x builds it on mysqlnd. Snuffleupagus needs 7.0+.
+PHP5=0
+case "$PHP_MINOR" in 5.*) PHP5=1 ;; esac
 
 # Known-good sha256 of the pristine php.net tarball, per release. Empty = not
 # pinned yet: the download still happens over TLS-authenticated php.net and the
 # computed digest is printed, but is not enforced until a value is filled in
 # here (do that once, from a build you trust). A MISMATCH always aborts.
 declare -A PHP_SHA256=(
+  [5.6.40]="1369a51eee3995d7fbd1c5342e5cc917760e276d561595b6052b21ace2656d1c"
   [7.0.33]="ab8c5be6e32b1f8d032909dedaaaa4bbb1a209e519abb01a52ce3914f9a13d96"
   [7.1.33]="bd7c0a9bd5433289ee01fd440af3715309faf583f75832b64fe169c100d52968"
   [7.2.34]="409e11bc6a2c18707dfc44bc61c820ddfd81e17481470f3405ee7822d8379903"
@@ -116,6 +122,9 @@ IONCUBE_LOADER="${REPO_DIR}/ioncube/ioncube_loader_lin_${PHP_SERIES}.so"
 # old 7.0/7.1 may need an older tag if it fails to compile there, and the
 # build + verify() step is the gate that catches that.
 ENABLE_SNUFFLEUPAGUS="${ENABLE_SNUFFLEUPAGUS:-0}"
+if [ "$PHP5" = "1" ] && [ "$ENABLE_SNUFFLEUPAGUS" = "1" ]; then
+  echo "ERROR: Snuffleupagus needs PHP 7.0+; it cannot be built for PHP ${PHP_MINOR}." >&2; exit 2
+fi
 SNUFFLEUPAGUS_VERSION="${SNUFFLEUPAGUS_VERSION:-0.14.0}"
 SNUFFLEUPAGUS_REPO="${SNUFFLEUPAGUS_REPO:-https://github.com/jvoisin/snuffleupagus}"
 SP_RULES_DIR="${SP_RULES_DIR:-${PREFIX}/etc/snuffleupagus.d}"
@@ -526,7 +535,7 @@ apply_patches() {
 
 build_php() {
   local openssl_libdir curl_libdir mcrypt_libdir openssl_pc_prefix
-  local -a mcrypt_configure=()
+  local -a mcrypt_configure=() php5_configure=()
 
   if [ -x "${PREFIX}/sbin/php-fpm" ] && [ "$FORCE" != "1" ]; then
     die "PHP ${PHP_SERIES} already exists at ${PREFIX}/sbin/php-fpm (use FORCE=1 to rebuild)."
@@ -550,6 +559,7 @@ build_php() {
     export LDFLAGS="-L${mcrypt_libdir} -Wl,-rpath,${mcrypt_libdir} ${LDFLAGS}"
     mcrypt_configure=("--with-mcrypt=${MCRYPT_PREFIX}")
   fi
+  [ "$PHP5" = "1" ] && php5_configure=("--with-mysql=mysqlnd")
 
   pkg-config --exists openssl || die "private OpenSSL pkg-config metadata not found."
   openssl_pc_prefix="$(pkg-config --variable=prefix openssl)"
@@ -560,7 +570,7 @@ build_php() {
     log "configure PHP ${PHP_RELEASE} -> ${PREFIX}"
     # --with-openssl intentionally has no explicit prefix: PHP then uses
     # pkg-config, which correctly resolves the private OpenSSL lib64 install.
-    # No --with-mysql: the ancient `mysql` extension was removed in PHP 7.0.
+    # --with-mysql only on 5.x (php5_configure): the extension was removed in 7.0.
     ./configure \
       --prefix="${PREFIX}" \
       --exec-prefix="${PREFIX}" \
@@ -593,6 +603,7 @@ build_php() {
       --with-iconv \
       "${mcrypt_configure[@]}" \
       --with-mhash \
+      "${php5_configure[@]}" \
       --with-mysqli=mysqlnd \
       --with-pdo-mysql=mysqlnd \
       --with-pgsql \
@@ -641,7 +652,7 @@ build_php() {
 # SP is a plain PHP extension (no external libs). Gated behind ENABLE_SNUFFLEUPAGUS;
 # the loader ini + monitor-safe starter ruleset are written in
 # install_runtime_extensions(). PHP 5.x is NOT supported by SP and never reaches
-# here (this repo builds only 7.0-7.3).
+# here (PHP5=1 refuses ENABLE_SNUFFLEUPAGUS up front).
 build_snuffleupagus() {
   [ "$ENABLE_SNUFFLEUPAGUS" = "1" ] || { log "ENABLE_SNUFFLEUPAGUS=0 — skipping Snuffleupagus"; return; }
 
@@ -766,6 +777,7 @@ verify() {
   modules="$("$php_bin" -n -m 2>/dev/null)"
   want_modules=(openssl curl gd mbstring mysqli PDO pdo_mysql pgsql pdo_pgsql ldap tidy pspell sqlite3 pdo_sqlite zip)
   [ "$USE_MCRYPT" = "1" ] && want_modules+=(mcrypt)
+  [ "$PHP5" = "1" ] && want_modules+=(mysql)
   for module in "${want_modules[@]}"; do
     grep -Fxq "$module" <<<"$modules" || die "expected PHP module missing: ${module}"
   done
@@ -840,21 +852,22 @@ verify() {
 }
 
 run_regression_tests() {
-  local test="${REPO_DIR}/test-openssl35.sh"
+  local test
 
   if [ "$RUN_REGRESSION_TESTS" != "1" ]; then
     log "post-build regression suite disabled"
     return
   fi
-  if [ ! -r "$test" ]; then
-    warn "regression suite ${test} not present — skipping"
-    return
-  fi
 
-  log "running $(basename "$test") against ${PREFIX}"
-  PHP_PREFIX="$PREFIX" PHP_RELEASE="$PHP_RELEASE" OPENSSL_PREFIX="$OPENSSL_PREFIX" \
-    OPENSSL_VERSION="$OPENSSL_VERSION" CURL_VERSION="$CURL_VERSION" bash "$test"
-  log "PHP ${PHP_SERIES} production regression suite passed"
+  # test-openssl35.sh: linkage, TLS, RSA/AES, CSR/X509, PKCS#12, FPM config.
+  # test-openssl35-legacy.sh: the legacy provider (MD4/RC4/DES/... old code uses).
+  for test in test-openssl35.sh test-openssl35-legacy.sh; do
+    [ -r "${REPO_DIR}/${test}" ] || die "required regression test missing: ${REPO_DIR}/${test}"
+    log "running ${test} against ${PREFIX}"
+    PHP_PREFIX="$PREFIX" PHP_RELEASE="$PHP_RELEASE" OPENSSL_PREFIX="$OPENSSL_PREFIX" \
+      OPENSSL_VERSION="$OPENSSL_VERSION" CURL_VERSION="$CURL_VERSION" bash "${REPO_DIR}/${test}"
+  done
+  log "PHP ${PHP_SERIES} production regression suites passed"
 }
 
 main() {

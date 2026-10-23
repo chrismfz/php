@@ -1,0 +1,121 @@
+commit e546d721e8c61fb1218335dc75b1874033c3ca24
+Author: Sergei Turchanov <turchanov@farpost.com>
+Date:   Wed Aug 28 14:37:52 2019 +1000
+
+    Fix #78413: php-fpm request_terminate_timeout does not take effect after fastcgi_finish_request
+    
+    To retain legacy behavior I decided to add an option to control request
+    termination logic. If request_terminate_timeout_track_finished is set,
+    then request will be tracked for time limits even after
+    fastcgi_finish_request was called.
+    
+    This patch depends on the fix provided in BUG 78469 (otherwise php-fpm
+    workers listening on named pipes on Windows will be erroneously terminated)
+    (PR #4636)
+
+diff --git a/sapi/fpm/fpm/fpm_conf.c b/sapi/fpm/fpm/fpm_conf.c
+index 72e6db2..7a05286 100644
+--- a/sapi/fpm/fpm/fpm_conf.c
++++ b/sapi/fpm/fpm/fpm_conf.c
+@@ -147,6 +147,7 @@ static struct ini_value_parser_s ini_fpm_pool_options[] = {
+ 	{ "request_slowlog_timeout",   &fpm_conf_set_time,        WPO(request_slowlog_timeout) },
+ 	{ "request_slowlog_trace_depth", &fpm_conf_set_integer,     WPO(request_slowlog_trace_depth) },
+ 	{ "request_terminate_timeout", &fpm_conf_set_time,        WPO(request_terminate_timeout) },
++	{ "request_terminate_timeout_track_finished", &fpm_conf_set_boolean, WPO(request_terminate_timeout_track_finished) },
+ 	{ "rlimit_files",              &fpm_conf_set_integer,     WPO(rlimit_files) },
+ 	{ "rlimit_core",               &fpm_conf_set_rlimit_core, WPO(rlimit_core) },
+ 	{ "chroot",                    &fpm_conf_set_string,      WPO(chroot) },
+@@ -1674,6 +1675,7 @@ static void fpm_conf_dump() /* {{{ */
+ 		zlog(ZLOG_NOTICE, "\trequest_slowlog_timeout = %ds",   wp->config->request_slowlog_timeout);
+ 		zlog(ZLOG_NOTICE, "\trequest_slowlog_trace_depth = %d", wp->config->request_slowlog_trace_depth);
+ 		zlog(ZLOG_NOTICE, "\trequest_terminate_timeout = %ds", wp->config->request_terminate_timeout);
++		zlog(ZLOG_NOTICE, "\trequest_terminate_timeout_track_finished = %s", BOOL2STR(wp->config->request_terminate_timeout_track_finished));
+ 		zlog(ZLOG_NOTICE, "\trlimit_files = %d",               wp->config->rlimit_files);
+ 		zlog(ZLOG_NOTICE, "\trlimit_core = %d",                wp->config->rlimit_core);
+ 		zlog(ZLOG_NOTICE, "\tchroot = %s",                     STR2STR(wp->config->chroot));
+diff --git a/sapi/fpm/fpm/fpm_conf.h b/sapi/fpm/fpm/fpm_conf.h
+index 44de1f3..42fa3cc 100644
+--- a/sapi/fpm/fpm/fpm_conf.h
++++ b/sapi/fpm/fpm/fpm_conf.h
+@@ -81,6 +81,7 @@ struct fpm_worker_pool_config_s {
+ 	int request_slowlog_timeout;
+ 	int request_slowlog_trace_depth;
+ 	int request_terminate_timeout;
++	int request_terminate_timeout_track_finished;
+ 	int rlimit_files;
+ 	int rlimit_core;
+ 	char *chroot;
+diff --git a/sapi/fpm/fpm/fpm_process_ctl.c b/sapi/fpm/fpm/fpm_process_ctl.c
+index 7713355..17fbe8d 100644
+--- a/sapi/fpm/fpm/fpm_process_ctl.c
++++ b/sapi/fpm/fpm/fpm_process_ctl.c
+@@ -292,13 +292,14 @@ static void fpm_pctl_check_request_timeout(struct timeval *now) /* {{{ */
+ 	struct fpm_worker_pool_s *wp;
+ 
+ 	for (wp = fpm_worker_all_pools; wp; wp = wp->next) {
++		int track_finished = wp->config->request_terminate_timeout_track_finished;
+ 		int terminate_timeout = wp->config->request_terminate_timeout;
+ 		int slowlog_timeout = wp->config->request_slowlog_timeout;
+ 		struct fpm_child_s *child;
+ 
+ 		if (terminate_timeout || slowlog_timeout) {
+ 			for (child = wp->children; child; child = child->next) {
+-				fpm_request_check_timed_out(child, now, terminate_timeout, slowlog_timeout);
++				fpm_request_check_timed_out(child, now, terminate_timeout, slowlog_timeout, track_finished);
+ 			}
+ 		}
+ 	}
+diff --git a/sapi/fpm/fpm/fpm_request.c b/sapi/fpm/fpm/fpm_request.c
+index 65f9c4a..83401f1 100644
+--- a/sapi/fpm/fpm/fpm_request.c
++++ b/sapi/fpm/fpm/fpm_request.c
+@@ -223,7 +223,7 @@ void fpm_request_finished() /* {{{ */
+ }
+ /* }}} */
+ 
+-void fpm_request_check_timed_out(struct fpm_child_s *child, struct timeval *now, int terminate_timeout, int slowlog_timeout) /* {{{ */
++void fpm_request_check_timed_out(struct fpm_child_s *child, struct timeval *now, int terminate_timeout, int slowlog_timeout, int track_finished) /* {{{ */
+ {
+ 	struct fpm_scoreboard_proc_s proc, *proc_p;
+ 
+@@ -245,7 +245,7 @@ void fpm_request_check_timed_out(struct fpm_child_s *child, struct timeval *now,
+ 	}
+ #endif
+ 
+-	if (proc.request_stage > FPM_REQUEST_ACCEPTING && proc.request_stage < FPM_REQUEST_END) {
++	if (proc.request_stage > FPM_REQUEST_ACCEPTING && ((proc.request_stage < FPM_REQUEST_END) || track_finished)) {
+ 		char purified_script_filename[sizeof(proc.script_filename)];
+ 		struct timeval tv;
+ 
+diff --git a/sapi/fpm/fpm/fpm_request.h b/sapi/fpm/fpm/fpm_request.h
+index 782d02d..15bce58 100644
+--- a/sapi/fpm/fpm/fpm_request.h
++++ b/sapi/fpm/fpm/fpm_request.h
+@@ -13,7 +13,7 @@ void fpm_request_finished();				/* request processed: cleaning current request *
+ struct fpm_child_s;
+ struct timeval;
+ 
+-void fpm_request_check_timed_out(struct fpm_child_s *child, struct timeval *tv, int terminate_timeout, int slowlog_timeout);
++void fpm_request_check_timed_out(struct fpm_child_s *child, struct timeval *tv, int terminate_timeout, int slowlog_timeout, int track_finished);
+ int fpm_request_is_idle(struct fpm_child_s *child);
+ const char *fpm_request_get_stage_name(int stage);
+ int fpm_request_last_activity(struct fpm_child_s *child, struct timeval *tv);
+diff --git a/sapi/fpm/www.conf.in b/sapi/fpm/www.conf.in
+index a622726..092dec4 100644
+--- a/sapi/fpm/www.conf.in
++++ b/sapi/fpm/www.conf.in
+@@ -339,6 +339,14 @@ pm.max_spare_servers = 3
+ ; Default Value: 0
+ ;request_terminate_timeout = 0
+ 
++; The timeout set by 'request_terminate_timeout' ini option is not engaged after
++; application calls 'fastcgi_finish_request' or when application has finished and
++; shutdown functions are being called (registered via register_shutdown_function).
++; This option will enable timeout limit to be applied unconditionally
++; even in such cases.
++; Default Value: no
++;request_terminate_timeout_track_finished = no
++
+ ; Set open file descriptor rlimit.
+ ; Default Value: system defined value
+ ;rlimit_files = 1024

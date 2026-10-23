@@ -1,0 +1,25 @@
+commit 09e522322af7268f53d340cbff3d109fab058539
+Author: Miriam Lauter <mlauter@etsy.com>
+Date:   Mon Mar 18 12:47:18 2019 -0400
+
+    Fix #77767: phpdbg break command help message shows incorrect aliases
+    
+    Previously the aliases for at and del were listed as A and d
+    in the help message for break. This patch corrects the aliases
+    to be @ and ~ respectively.
+
+diff --git a/sapi/phpdbg/phpdbg_help.c b/sapi/phpdbg/phpdbg_help.c
+index e9caa18895..b328906d3c 100644
+--- a/sapi/phpdbg/phpdbg_help.c
++++ b/sapi/phpdbg/phpdbg_help.c
+@@ -544,8 +544,8 @@ phpdbg_help_text_t phpdbg_help_text[] = {
+ "types:" CR CR
+ 
+ "  **Target**   **Alias** **Purpose**" CR
+-"  **at**       **A**     specify breakpoint by location and condition" CR
+-"  **del**      **d**     delete breakpoint by breakpoint identifier number" CR CR
++"  **at**       **@**     specify breakpoint by location and condition" CR
++"  **del**      **~**     delete breakpoint by breakpoint identifier number" CR CR
+ 
+ "**Break at** takes two arguments. The first is any valid target. The second "
+ "is a valid PHP expression which will trigger the break in "

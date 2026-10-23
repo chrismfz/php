@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # test-openssl35.sh — post-build production-parity checks for a source-built
-# PHP 7.x against the private OpenSSL 3.5 + GnuTLS curl. Version-agnostic: it
+# PHP (5.6 / 7.x) against the private OpenSSL 3.5 + GnuTLS curl. Version-agnostic: it
 # reads the expected release from the environment (build.sh passes it), so the
 # one script serves every minor.
 #
@@ -108,6 +108,32 @@ if ($enc === false) exit(1);
 $dec = openssl_decrypt($enc, "aes-256-cbc", $key, OPENSSL_RAW_DATA, $iv);
 var_dump($dec === $plain);
 if ($dec !== $plain) exit(2);
+'
+
+log "CSR + self-signed X509"
+"$PHP_BIN" -n -r '
+$dn = array("commonName"=>"ngm-openssl35.local", "organizationName"=>"NGM test");
+$k = openssl_pkey_new(array("private_key_bits"=>2048,"private_key_type"=>OPENSSL_KEYTYPE_RSA));
+$csr = openssl_csr_new($dn, $k, array("digest_alg"=>"sha256"));
+if ($csr === false) exit(1);
+$crt = openssl_csr_sign($csr, null, $k, 1, array("digest_alg"=>"sha256"));
+if ($crt === false) exit(2);
+if (!openssl_x509_export($crt, $pem)) exit(3);
+var_dump(strpos($pem, "BEGIN CERTIFICATE") !== false);
+if (strpos($pem, "BEGIN CERTIFICATE") === false) exit(4);
+'
+
+log "PKCS#12 export / read"
+"$PHP_BIN" -n -r '
+$dn = array("commonName"=>"ngm-openssl35.local");
+$k = openssl_pkey_new(array("private_key_bits"=>2048,"private_key_type"=>OPENSSL_KEYTYPE_RSA));
+$csr = openssl_csr_new($dn, $k, array("digest_alg"=>"sha256"));
+$crt = openssl_csr_sign($csr, null, $k, 1, array("digest_alg"=>"sha256"));
+if (!openssl_pkcs12_export($crt, $p12, $k, "test-pass")) exit(1);
+$out = array();
+if (!openssl_pkcs12_read($p12, $out, "test-pass")) exit(2);
+var_dump(isset($out["cert"]), isset($out["pkey"]));
+if (!isset($out["cert"]) || !isset($out["pkey"])) exit(3);
 '
 
 if [ -f "${PHP_PREFIX}/etc/php-fpm.conf" ]; then

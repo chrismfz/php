@@ -1,0 +1,94 @@
+commit c00f5e6531a3f72bb8f7c107d2c390fadad736a0
+Author: Christoph M. Becker <cmbecker69@gmx.de>
+Date:   Sat Aug 4 12:51:57 2018 +0200
+
+    Fix #76704: mb_detect_order return value varies based on argument type
+    
+    php_mb_parse_encoding_list() and php_mb_parse_encoding_array() are
+    supposed to return SUCCESS and FAILURE, not 1 and 0, respectively.
+
+diff --git a/NEWS b/NEWS
+index a3251a7..e02ef74 100644
+--- a/NEWS
++++ b/NEWS
+@@ -2,6 +2,9 @@ PHP                                                                        NEWS
+ |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+ ?? ??? ????, PHP 7.1.22
+ 
++- mbstring:
++  . Fixed bug #76704 (mb_detect_order return value varies based on argument
++    type). (cmb)
+ 
+ 16 Aug 2018, PHP 7.1.21
+ 
+diff --git a/ext/mbstring/mbstring.c b/ext/mbstring/mbstring.c
+index d997ffb..fa2d794 100644
+--- a/ext/mbstring/mbstring.c
++++ b/ext/mbstring/mbstring.c
+@@ -681,7 +681,7 @@ static sapi_post_entry mbstr_post_entries[] = {
+ /* }}} */
+ 
+ /* {{{ static int php_mb_parse_encoding_list()
+- *  Return 0 if input contains any illegal encoding, otherwise 1.
++ *  Return FAILURE if input contains any illegal encoding, otherwise SUCCESS.
+  *  Even if any illegal encoding is detected the result may contain a list
+  *  of parsed encodings.
+  */
+@@ -762,7 +762,7 @@ php_mb_parse_encoding_list(const char *value, size_t value_length, const mbfl_en
+ 						*entry++ = encoding;
+ 						n++;
+ 					} else {
+-						ret = 0;
++						ret = FAILURE;
+ 					}
+ 				}
+ 				p1 = p2 + 1;
+@@ -778,7 +778,7 @@ php_mb_parse_encoding_list(const char *value, size_t value_length, const mbfl_en
+ 				if (return_list) {
+ 					*return_list = NULL;
+ 				}
+-				ret = 0;
++				ret = FAILURE;
+ 			}
+ 			if (return_size) {
+ 				*return_size = n;
+@@ -790,7 +790,7 @@ php_mb_parse_encoding_list(const char *value, size_t value_length, const mbfl_en
+ 			if (return_size) {
+ 				*return_size = 0;
+ 			}
+-			ret = 0;
++			ret = FAILURE;
+ 		}
+ 		efree(tmpstr);
+ 	}
+@@ -800,7 +800,7 @@ php_mb_parse_encoding_list(const char *value, size_t value_length, const mbfl_en
+ /* }}} */
+ 
+ /* {{{ static int php_mb_parse_encoding_array()
+- *  Return 0 if input contains any illegal encoding, otherwise 1.
++ *  Return FAILURE if input contains any illegal encoding, otherwise SUCCESS.
+  *  Even if any illegal encoding is detected the result may contain a list
+  *  of parsed encodings.
+  */
+diff --git a/ext/mbstring/tests/bug76704.phpt b/ext/mbstring/tests/bug76704.phpt
+new file mode 100644
+index 0000000..502f7e3
+--- /dev/null
++++ b/ext/mbstring/tests/bug76704.phpt
+@@ -0,0 +1,16 @@
++--TEST--
++Bug #76704 (mb_detect_order return value varies based on argument type)
++--SKIPIF--
++<?php
++if (!extension_loaded('mbstring')) die('skip mbstring extension not available');
++?>
++--FILE--
++<?php
++var_dump(mb_detect_order('Foo, UTF-8'));
++var_dump(mb_detect_order(['Foo', 'UTF-8']))
++?>
++===DONE===
++--EXPECT--
++bool(false)
++bool(false)
++===DONE===

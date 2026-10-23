@@ -1,0 +1,12 @@
+diff --git a/ext/date/php_date.c b/ext/date/php_date.c
+index 47f78a2..494a77f 100644
+--- a/ext/date/php_date.c
++++ b/ext/date/php_date.c
+@@ -3414,6 +3414,7 @@ static void php_date_time_set(zval *object, long h, long i, long s, zval *return
+ 	dateobj->time->i = i;
+ 	dateobj->time->s = s;
+ 	timelib_update_ts(dateobj->time, NULL);
++	timelib_update_from_sse(dateobj->time);
+ }
+ 
+ /* {{{ proto DateTime date_time_set(DateTime object, long hour, long minute[, long second])

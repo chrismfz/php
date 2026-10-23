@@ -1,0 +1,99 @@
+commit a890c5beb8327b7fbb2f25347256ef0dc5809750
+Author: Derick Rethans <github@derickrethans.nl>
+Date:   Thu Feb 28 13:50:35 2019 +0000
+
+    Fixed bug #50020 (DateInterval:createDateFromString() silently fails)
+
+diff --git a/ext/date/php_date.c b/ext/date/php_date.c
+index c8479b5164..5cc3f794cd 100644
+--- a/ext/date/php_date.c
++++ b/ext/date/php_date.c
+@@ -4435,12 +4435,21 @@ PHP_FUNCTION(date_interval_create_from_date_string)
+ 		RETURN_FALSE;
+ 	}
+ 
+-	php_date_instantiate(date_ce_interval, return_value TSRMLS_CC);
+-
+ 	time = timelib_strtotime(time_str, time_str_len, &err, DATE_TIMEZONEDB, php_date_parse_tzfile_wrapper);
++
++	if (err->error_count > 0)  {
++		php_error_docref(NULL, E_WARNING, "Unknown or bad format (%s) at position %d (%c): %s", time_str,
++			err->error_messages[0].position, err->error_messages[0].character ? err->error_messages[0].character : ' ', err->error_messages[0].message);
++		RETVAL_FALSE;
++		goto cleanup;
++	}
++
++	php_date_instantiate(date_ce_interval, return_value TSRMLS_CC);
+ 	diobj = (php_interval_obj *) zend_object_store_get_object(return_value TSRMLS_CC);
+ 	diobj->diff = timelib_rel_time_clone(&time->relative);
+ 	diobj->initialized = 1;
++
++cleanup:
+ 	timelib_time_dtor(time);
+ 	timelib_error_container_dtor(err);
+ }
+diff --git a/ext/date/tests/date_interval_create_from_date_string_broken.phpt b/ext/date/tests/date_interval_create_from_date_string_broken.phpt
+new file mode 100644
+index 0000000000..c065de0f8c
+--- /dev/null
++++ b/ext/date/tests/date_interval_create_from_date_string_broken.phpt
+@@ -0,0 +1,10 @@
++--TEST--
++Test date_interval_create_from_date_string() function : nonsense data
++--FILE--
++<?php
++$i = date_interval_create_from_date_string("foobar");
++var_dump($i);
++?>
++--EXPECTF--
++Warning: date_interval_create_from_date_string(): Unknown or bad format (foobar) at position 0 (f): The timezone could not be found in the database in %sdate_interval_create_from_date_string_broken.php on line 2
++bool(false)
+diff --git a/ext/date/tests/date_interval_create_from_date_string_nullparam.phpt b/ext/date/tests/date_interval_create_from_date_string_nullparam.phpt
+index bb7bf94ce2..e03386ad3c 100644
+--- a/ext/date/tests/date_interval_create_from_date_string_nullparam.phpt
++++ b/ext/date/tests/date_interval_create_from_date_string_nullparam.phpt
+@@ -4,39 +4,10 @@ Test date_interval_create_from_date_string() function : null parameter
+ Rodrigo Prado de Jesus <royopa [at] gmail [dot] com>
+ --FILE--
+ <?php
+-$i = date_interval_create_from_date_string(null); //returns a empty object
++$i = date_interval_create_from_date_string(null);
+ var_dump($i);
+ ?>
+ --EXPECTF--
+-object(DateInterval)#1 (15) {
+-  ["y"]=>
+-  int(0)
+-  ["m"]=>
+-  int(0)
+-  ["d"]=>
+-  int(0)
+-  ["h"]=>
+-  int(0)
+-  ["i"]=>
+-  int(0)
+-  ["s"]=>
+-  int(0)
+-  ["weekday"]=>
+-  int(0)
+-  ["weekday_behavior"]=>
+-  int(0)
+-  ["first_last_day_of"]=>
+-  int(0)
+-  ["invert"]=>
+-  int(0)
+-  ["days"]=>
+-  int(0)
+-  ["special_type"]=>
+-  int(0)
+-  ["special_amount"]=>
+-  int(0)
+-  ["have_weekday_relative"]=>
+-  int(0)
+-  ["have_special_relative"]=>
+-  int(0)
+-}
+\ No newline at end of file
++Warning: date_interval_create_from_date_string(): Unknown or bad format () at position 0 ( ): Empty string in %sdate_interval_create_from_date_string_nullparam.php on line 2
++bool(false)
++
