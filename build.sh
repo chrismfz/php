@@ -33,7 +33,7 @@
 #   ENABLE_LEGACY_PROVIDER=0    disable the private OpenSSL legacy provider
 #   ENABLE_IONCUBE=0            skip the bundled ionCube loader
 #   ENABLE_SNUFFLEUPAGUS=1      build + install the Snuffleupagus hardening module (PHP 7.0+; off by default)
-#   SNUFFLEUPAGUS_VERSION=X.Y.Z Snuffleupagus git tag to build (default 0.13.0)
+#   SNUFFLEUPAGUS_VERSION=X.Y.Z Snuffleupagus git tag to build (default 0.14.0)
 #   PHP_LIBDIR_NAME=...         override the configure system library dir
 #   JOBS=N                      parallel make jobs
 
@@ -74,7 +74,7 @@ PREFIX="${PREFIX:-${NGM_ROOT}/${PHP_SERIES}}"
 BUILD_ROOT="${BUILD_ROOT:-/usr/local/src/ngm-php7-build}"
 SRC_DIR="${BUILD_ROOT}/php-${PHP_RELEASE}"
 
-OPENSSL_VERSION="${OPENSSL_VERSION:-3.5.8}"
+OPENSSL_VERSION="${OPENSSL_VERSION:-3.5.9}"
 OPENSSL_PREFIX="${OPENSSL_PREFIX:-${NGM_ROOT}/openssl-3.5}"
 CURL_VERSION="${CURL_VERSION:-8.21.0}"
 CURL_PREFIX="${CURL_PREFIX:-${NGM_ROOT}/curl-gnutls}"
@@ -88,12 +88,12 @@ MCRYPT_PREFIX="${MCRYPT_PREFIX:-${NGM_ROOT}/libmcrypt}"
 # repos share the /opt/ngm/php/openssl-3.5 prefix, so they MUST pin the same
 # OpenSSL — otherwise a build for one version rebuilds the shared prefix out from
 # under the others.
-OPENSSL_SHA256="${OPENSSL_SHA256:-a8f84a39918ec6415ce765d9b429d313ba97b8143169c172e734b9514464f5b2}"  # openssl-3.5.8.tar.gz
+OPENSSL_SHA256="${OPENSSL_SHA256:-603f5602e2eef00d77fbd429d34dcd5822bb301757a1bc9cdb24c670f1eb859a}"  # openssl-3.5.9.tar.gz
 CURL_SHA256="${CURL_SHA256:-aa1b66a70eace83dc624508745646c08ae561de512ab403adffb93ac87fc72e6}"        # curl-8.21.0.tar.xz
 MCRYPT_SHA256="${MCRYPT_SHA256:-e4eb6c074bbab168ac47b947c195ff8cef9d51a211cdd18ca9c9ef34d27a373e}"     # libmcrypt-2.5.8.tar.gz
 # Snuffleupagus source tarball digest — same policy as above (empty warns with
 # the computed digest; non-empty enforces, mismatch aborts). Pin per SNUFFLEUPAGUS_VERSION.
-SNUFFLEUPAGUS_SHA256="${SNUFFLEUPAGUS_SHA256:-}"                                                       # v0.13.0 GitHub tag archive
+SNUFFLEUPAGUS_SHA256="${SNUFFLEUPAGUS_SHA256:-}"                                                       # v0.14.0 GitHub tag archive
 
 JOBS="${JOBS:-$(nproc 2>/dev/null || echo 2)}"
 FORCE="${FORCE:-0}"
@@ -109,12 +109,14 @@ IONCUBE_LOADER="${REPO_DIR}/ioncube/ioncube_loader_lin_${PHP_SERIES}.so"
 # Snuffleupagus (jvoisin/snuffleupagus) — PHP 7.0+/8.x hardening module. OFF by
 # default: like the Remi/NGM policy, the module ships only WITH a rendered
 # ruleset, so a build enables it explicitly (ENABLE_SNUFFLEUPAGUS=1) and the
-# NGM/CFM manager renders the real .rules into SP_RULES_DIR. v0.13.0 fixes
-# CVE-2026-22034 (upload_validation ACE) — do not pin older on 7.4+/8.x; a very
-# old 7.0/7.1 may need an older tag if 0.13.0 fails to compile there, and the
+# NGM/CFM manager renders the real .rules into SP_RULES_DIR. v0.13.0 fixed
+# CVE-2026-22034 (upload_validation ACE) — never pin older than that. v0.14.0 adds
+# cookie-encryption memory-safety fixes and rejects non-ASCII bytes in rules (keep
+# rendered rules ASCII). It still guards PHP 7.0-7.2 paths in its source; a very
+# old 7.0/7.1 may need an older tag if it fails to compile there, and the
 # build + verify() step is the gate that catches that.
 ENABLE_SNUFFLEUPAGUS="${ENABLE_SNUFFLEUPAGUS:-0}"
-SNUFFLEUPAGUS_VERSION="${SNUFFLEUPAGUS_VERSION:-0.13.0}"
+SNUFFLEUPAGUS_VERSION="${SNUFFLEUPAGUS_VERSION:-0.14.0}"
 SNUFFLEUPAGUS_REPO="${SNUFFLEUPAGUS_REPO:-https://github.com/jvoisin/snuffleupagus}"
 SP_RULES_DIR="${SP_RULES_DIR:-${PREFIX}/etc/snuffleupagus.d}"
 
@@ -651,7 +653,7 @@ build_snuffleupagus() {
   local tarball="${BUILD_ROOT}/snuffleupagus-${ver}.tar.gz"
   local srcroot="${BUILD_ROOT}/snuffleupagus-${ver}"
 
-  # GitHub tag archives are v-prefixed (e.g. v0.13.0). Override SNUFFLEUPAGUS_REPO
+  # GitHub tag archives are v-prefixed (e.g. v0.14.0). Override SNUFFLEUPAGUS_REPO
   # or SNUFFLEUPAGUS_VERSION to change source/tag.
   fetch "${SNUFFLEUPAGUS_REPO}/archive/refs/tags/v${ver}.tar.gz" "$tarball"
   check_sha256 "$tarball" "$SNUFFLEUPAGUS_SHA256" "snuffleupagus-${ver}.tar.gz"
@@ -722,7 +724,7 @@ EOF
       install -d -m 755 "$SP_RULES_DIR"
       if [ ! -f "${SP_RULES_DIR}/00-ngm-default.rules" ]; then
         cat > "${SP_RULES_DIR}/00-ngm-default.rules" <<'RULES'
-; NGM default Snuffleupagus policy — MONITOR/placeholder only.
+; NGM default Snuffleupagus policy - MONITOR/placeholder only.
 ; The real ruleset is rendered by the NGM/CFM manager. This file only sets a
 ; log sink so the module loads cleanly and enforces NOTHING until real rules land.
 sp.log_media("syslog");
