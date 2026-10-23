@@ -100,7 +100,7 @@ order	patch_no	decision	category	sha256	filename	reason
 99	571	keep	CVE	3263c703ccefe2f80b45602977f2331cd3d0d405be40e6e8a4e32d1920f1aca0	php74-CVE-2025-1220.patch	
 100	572	keep	CVE	cc2e2cbf7cde55ff9b2657a81b0e31324edff8a267fffc2552737b9b5f110081	php74-CVE-2025-6491.patch	
 101	573	keep	CVE	eb20f44fdacbe76e801e6bbecb936b2f7f0faa1aae918ac63401476b3b5b1068	CVE-2025-14178.patch	
-102	574	keep	CVE	dc56e2d8c3bccbd8d344caa7341e98641c16b3671d2d29356c025238bbda55bd	CVE-2025-1736.patch	
+102	574	keep	CVE	a08698bd896a7071c26d8222ede46e42c0b3be304679be53e2f82ad50d724a31	CVE-2025-1736.patch	
 103	16	skip	build/packaging	43aaf59ac4a59b985f033238729a77c21e8bb4231e411c2285b138caea338a52	0016-Fix-libxml2-v2.15.0-compatibility.patch	build/packaging glue, not a source security/bug backport
 104	1100	keep	CVE	99fb48bf14b39a5359a74033eef61739c5f38bb88acbb56caa7fd90817531b31	php-7.3-CVE-2026-6722.patch	
 105	1101	keep	CVE	3553f397924681c65a62b60e1b9de7b8bd165fdc59592f417c5a60fa44d08e93	php-7.3-CVE-2026-7262.patch	
@@ -109,3 +109,7 @@ order	patch_no	decision	category	sha256	filename	reason
 108	1104	keep	CVE	6dab06a4696205e56d8482fd0b3f3244f1398369e547b0b3098564e109836f4e	php-7.3-CVE-2026-7568.patch	
 109	1105	keep	CVE	3e95ef82a2777a39e370fc9c548a33dee501a875be518d54bd04cae8edb2c1af	php-7.3-CVE-2026-14355.patch	
 110	1106	skip	build/packaging	496715a81286680ffd5575d37b62dd017d4f55891bb28e0cafd490271d98b39c	php-7.3.33-caching-sha2-password.patch	build/packaging glue, not a source security/bug backport
+111	1107	keep	CVE	a3d00d84233b84556dd3a617bf320cae99183782512a4d4761b770eb9c50379f	php-7.3-CVE-2026-9672.patch	
+112	1108	keep	CVE	edce7fe85169514453fd82136856a0026e94d146799eeab526cee98d6285ed1d	php-7.3-CVE-2026-17543.patch	
+113	1109	keep	CVE	9d4a6087396433979d89f1b44bf12dd6984329c587cd1277b766938118313eaf	php-7.3-CVE-2026-7260.patch	
+114	1110	keep	CVE	8fb3401fe34f2597748ebf2dcc3dd4060c6db1d9b946d979a50971f07f58b1e2	php-7.3-CVE-2026-109618-109619.patch	

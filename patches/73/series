@@ -75,3 +75,7 @@ php-7.3-CVE-2026-6735.patch -p1
 php-7.3-CVE-2026-7261.patch -p1
 php-7.3-CVE-2026-7568.patch -p1
 php-7.3-CVE-2026-14355.patch -p1
+php-7.3-CVE-2026-9672.patch -p1
+php-7.3-CVE-2026-17543.patch -p1
+php-7.3-CVE-2026-7260.patch -p1
+php-7.3-CVE-2026-109618-109619.patch -p1

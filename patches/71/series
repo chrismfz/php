@@ -126,3 +126,15 @@ CVE-2019-9025.patch -p1
 php72-CVE-2025-1220.patch -p1
 php74-CVE-2025-6491.patch -p1
 php-7.1-CVE-2019-19246.patch -p1
+php-7.1-CVE-2026-6722.patch -p1
+php-7.1-CVE-2026-7262.patch -p1
+php-7.1-CVE-2026-6735.patch -p1
+php-7.1-CVE-2026-7261.patch -p1
+php-7.1-CVE-2026-7568.patch -p1
+php-7.1-CVE-2026-14355.patch -p1
+php-7.1-CVE-2026-9672.patch -p1
+php-7.1-CVE-2026-17543.patch -p1
+php-7.1-CVE-2026-7260.patch -p1
+php-7.1-CVE-2025-1735.patch -p1
+php-7.1-CVE-2025-1736.patch -p1
+php-7.1-CVE-2026-109618-109619.patch -p1
