@@ -1,4 +1,4 @@
-srpm_filename	ea-php72-php-7.2.34-12.el8.cloudlinux.9.src.rpm
-srpm_sha256	bec695b7b1e55e489be35b7845d303bee8bd4d5debfd1b88f729a3b041ac4b19
-srpm_release	12.el8.cloudlinux.9
-source_url	https://repo.cloudlinux.com/cloudlinux/EA4/8.1/updates/src/ea-php72-php-7.2.34-12.el8.cloudlinux.9.src.rpm
+srpm_filename	ea-php72-php-7.2.34-12.el8.cloudlinux.18.src.rpm
+srpm_sha256	32142b53c3df727ff61ac388bf8da2cb3f71ada88fdebb9692555e0955fff717
+srpm_release	12.el8.cloudlinux.18
+source_url	https://repo.cloudlinux.com/cloudlinux/EA4/8.1/updates/src/ea-php72-php-7.2.34-12.el8.cloudlinux.18.src.rpm

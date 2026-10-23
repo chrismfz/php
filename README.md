@@ -1,5 +1,11 @@
 # PHP 7.x for NGM — security-patched, source-built
 
+> **This repo is `chrismfz/php`** (renamed from `chrismfz/php7`; GitHub redirects
+> the old url). It is meant to become the one home for every source-built legacy
+> PHP: today it builds 7.0–7.3; 5.6 and 5.3 move in later as `patches/56/` and
+> `patches/53/` on pristine tarballs. Until then they stay in `chrismfz/php53` and
+> `chrismfz/php56`.
+
 One builder for the end-of-life **PHP 7.0 / 7.1 / 7.2 / 7.3** runtimes NGM
 compiles and runs past php.net's EOL. Neither Remi (EL starts at 7.4) nor — on
 EL — anyone else packages these, so NGM builds them from source into
@@ -88,10 +94,17 @@ git diff patches/73/
 The private **OpenSSL** is pinned the same way (`build.sh`: `OPENSSL_VERSION` +
 `OPENSSL_SHA256`, currently the latest **3.5 LTS**) — deliberately not "latest at
 build time": pinning keeps the build reproducible, lets the tarball be
-sha256-verified before it touches the crypto path, and keeps php53/php56/php7
+sha256-verified before it touches the crypto path, and keeps php53/php56/php
 agreeing on the ONE shared `/opt/ngm/php/openssl-3.5` prefix. To learn when a newer
-3.5 LTS ships, run **`./tools/check-deps.py`** (detection only; `--bump` rewrites
-the two pin lines for review). curl and libmcrypt are sha-pinned too.
+3.5 LTS ships, run **`./tools/check-deps.py`**. curl and libmcrypt are sha-pinned
+too.
+
+**Dependency watch.** `tools/check-deps.py` checks every pinned input against
+upstream: the OpenSSL 3.5 LTS, curl, Snuffleupagus and the CloudLinux SRPM series
+per minor. It only reports by default; `--bump` rewrites the pins and re-imports a
+newer series for review. The weekly Action `.github/workflows/check-deps.yml` runs
+`--bump` and opens (or refreshes) one `deps/auto-update` PR. Detection is
+automatic, adoption is a reviewed merge after a host build.
 
 ## Status
 
@@ -102,30 +115,38 @@ the two pin lines for review). curl and libmcrypt are sha-pinned too.
 | 7.1  | 7.1.33          | ✅ 127 series + 1 local (39 CVEs) | **built & verified**; sha256 pinned; `ext/mcrypt` present (deprecated) |
 | 7.0  | 7.0.33          | ✅ 240 series + 1 local (45 CVEs) | **built & verified**; sha256 pinned; `ext/mcrypt` present |
 
-All four built & verified on AlmaLinux 10 against the private **OpenSSL 3.5.8**
-(latest 3.5 LTS), GnuTLS libcurl 8.21.0, ionCube 15.5 and Zend OPcache; every
+All four were built & verified on AlmaLinux 10 against the private **OpenSSL 3.5.8**,
+GnuTLS libcurl 8.21.0, ionCube 15.5 and Zend OPcache. The pins have since moved to
+OpenSSL 3.5.9 + Snuffleupagus 0.14.0 and the 2026-10-23 CloudLinux refresh below;
+those are apply-verified on the pristine tarballs, host build pending. Every
 dependency tarball (OpenSSL / curl / libmcrypt) and every PHP release is now
 **sha256-pinned and verified at build time**.
 
-**7.3 source:** from `ea-php73-php-7.3.33-15.el8.cloudlinux.16`. Of 110 applied
-CloudLinux patches, 76 are kept in the series and 1 (CVE-2017-9118) is rebased in
+**7.3 source:** from `ea-php73-php-7.3.33-15.el8.cloudlinux.18`. Of 114 applied
+CloudLinux patches, 80 are kept in the series and 1 (CVE-2017-9118) is rebased in
 `patches-local/73/` for the pristine 7.3.33 base; the rest are CloudLinux/LiteSpeed/
 EA4 runtime + build-packaging glue. CloudLinux's `php-7.3.33-fix-for-openssl-3.0.x.patch`
 is force-kept (`patches-local/73/include`) — it is what lets 7.3 build against the
 private OpenSSL 3.5. **Every CVE in the series is covered.**
 
-**7.2 source:** from `ea-php72-php-7.2.34-12.el8.cloudlinux.9`. 82 of 113 applied
+**7.2 source:** from `ea-php72-php-7.2.34-12.el8.cloudlinux.18`. 92 of 125 applied
 patches are kept in the series, plus the same rebased CVE-2017-9118 in
-`patches-local/72/` and the same force-kept OpenSSL-3.0 fix. 35 CVEs; every CVE in
+`patches-local/72/` and the same force-kept OpenSSL-3.0 fix. 45 CVEs; every CVE in
 the series is covered. Apply verified clean on a pristine 7.2.34 tree; host build
 pending.
 
-**7.1 source:** from `ea-php71-php-7.1.33-20.el8.cloudlinux.9` — 127 of 160 applied
-patches kept + rebased CVE-2017-9118 + force-kept OpenSSL-3.0 fix; 39 CVEs.
-**7.0 source:** from `ea-php70-php-7.0.33-29.el8.cloudlinux.9` — 240 of 274 applied
+**7.1 source:** from `ea-php71-php-7.1.33-20.el8.cloudlinux.17` — 139 of 174 applied
+patches kept + rebased CVE-2017-9118 + force-kept OpenSSL-3.0 fix; 51 CVEs.
+**7.0 source:** from `ea-php70-php-7.0.33-29.el8.cloudlinux.17` — 255 of 291 applied
 patches kept + rebased CVE-2017-9118 + force-kept OpenSSL-3.0 fix (7.0 ships its
-own `php-7.0.33-...` copy); 45 CVEs. Both apply clean on their pristine trees; host
+own `php-7.0.33-...` copy); 59 CVEs. Both apply clean on their pristine trees; host
 build pending. 7.0/7.1 keep `ext/mcrypt` (private libmcrypt), removed in 7.2.
+
+**PHP2SHELL (CVE-2026-109618 / CVE-2026-109619)** is in every series since the
+2026-10-23 refresh. It is a deliberate EOL trade: exceeding `memory_limit` (or an
+allocator overflow) now ends the worker with `_exit(1)` instead of a catchable
+fatal error, so shutdown functions don't run and the client sees a 502; on 7.x
+`session.upload_progress` is also disabled.
 
 ## Licence
 

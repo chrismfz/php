@@ -5,26 +5,26 @@ Re-run the tool on a newer SRPM and review `git diff patches/`.
 
 ## Source
 
-- SRPM: `ea-php73-php-7.3.33-15.el8.cloudlinux.16.src.rpm`
-- release: `15.el8.cloudlinux.16`
-- sha256: `45a99186ad858f38d5d1d6cc77fca71faeae49ba1818f76452ead30be6554667`
-- url: https://repo.cloudlinux.com/cloudlinux/EA4/8.1/updates/src/ea-php73-php-7.3.33-15.el8.cloudlinux.16.src.rpm
+- SRPM: `ea-php73-php-7.3.33-15.el8.cloudlinux.18.src.rpm`
+- release: `15.el8.cloudlinux.18`
+- sha256: `c024e966a2d39813666985a7f9b2cd88ac2abc826f6da7893aac51a5aa7b9f7d`
+- url: https://repo.cloudlinux.com/cloudlinux/EA4/8.1/updates/src/ea-php73-php-7.3.33-15.el8.cloudlinux.18.src.rpm
 
 ## What is kept
 
-77 of 110 applied patches are kept and applied by the build (see `series`); the rest are CloudLinux/LiteSpeed/EA4 runtime or build-packaging patches we do not use (full list + reason in `MANIFEST.tsv`).
+81 of 114 applied patches are kept and applied by the build (see `series`); the rest are CloudLinux/LiteSpeed/EA4 runtime or build-packaging patches we do not use (full list + reason in `MANIFEST.tsv`).
 
 | category | kept | skipped |
 |---|---|---|
-| CVE | 35 | 0 |
+| CVE | 39 | 0 |
 | build/packaging | 0 | 18 |
 | forced | 1 | 0 |
 | hardened | 41 | 0 |
 | vendor/sapi | 0 | 15 |
 
-## CVEs covered (35)
+## CVEs covered (39)
 
-CVE-2017-8923, CVE-2017-9118, CVE-2022-31625, CVE-2022-31626, CVE-2022-31628, CVE-2022-31629, CVE-2022-31631, CVE-2022-37454, CVE-2023-0567, CVE-2023-0568, CVE-2023-0662, CVE-2023-3247, CVE-2023-3823, CVE-2023-3824, CVE-2024-2756, CVE-2024-3096, CVE-2024-5458, CVE-2024-8925, CVE-2024-8927, CVE-2024-8929, CVE-2024-11233, CVE-2024-11234, CVE-2024-11236, CVE-2025-1217, CVE-2025-1219, CVE-2025-1220, CVE-2025-1736, CVE-2025-6491, CVE-2025-14178, CVE-2026-6722, CVE-2026-6735, CVE-2026-7261, CVE-2026-7262, CVE-2026-7568, CVE-2026-14355
+CVE-2017-8923, CVE-2017-9118, CVE-2022-31625, CVE-2022-31626, CVE-2022-31628, CVE-2022-31629, CVE-2022-31631, CVE-2022-37454, CVE-2023-0567, CVE-2023-0568, CVE-2023-0662, CVE-2023-3247, CVE-2023-3823, CVE-2023-3824, CVE-2024-2756, CVE-2024-3096, CVE-2024-5458, CVE-2024-8925, CVE-2024-8927, CVE-2024-8929, CVE-2024-11233, CVE-2024-11234, CVE-2024-11236, CVE-2025-1217, CVE-2025-1219, CVE-2025-1220, CVE-2025-1736, CVE-2025-6491, CVE-2025-14178, CVE-2026-6722, CVE-2026-6735, CVE-2026-7260, CVE-2026-7261, CVE-2026-7262, CVE-2026-7568, CVE-2026-9672, CVE-2026-14355, CVE-2026-17543, CVE-2026-109618
 
 ## Skipped (33)
 

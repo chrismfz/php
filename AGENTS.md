@@ -2,6 +2,12 @@
 
 ## Repository purpose
 
+> **This repo is `chrismfz/php`** (renamed from `chrismfz/php7`; GitHub redirects
+> the old url). It is meant to become the one home for every source-built legacy
+> PHP: today it builds 7.0–7.3; 5.6 and 5.3 move in later as `patches/56/` and
+> `patches/53/` on pristine tarballs. Until then they stay in `chrismfz/php53` and
+> `chrismfz/php56`.
+
 This repository builds the end-of-life **PHP 7.0 / 7.1 / 7.2 / 7.3** runtimes for
 NGM, security-patched and kept buildable on current Linux, past upstream EOL.
 
@@ -49,7 +55,10 @@ prefixes, compiler flags, configure options, installation layout, provider
 provisioning, runtime linkage checks, and applying the patch series. It is NOT the
 canonical store for source fixes. The private build dependencies (OpenSSL, curl,
 libmcrypt — the last only for 7.0/7.1) are **version-pinned and sha256-verified**;
-`tools/check-deps.py` reports when the OpenSSL 3.5 LTS pin is behind.
+`tools/check-deps.py` reports when any pin is behind (OpenSSL 3.5 LTS, curl,
+Snuffleupagus, the CloudLinux SRPM per minor); the weekly `check-deps` Action opens a
+`deps/auto-update` PR with `--bump`'s diff. Review it like any refresh: validate the
+apply, host-build, then merge. Never make a build fetch "latest" instead.
 
 ## OpenSSL maintenance
 

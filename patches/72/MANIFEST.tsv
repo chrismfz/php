@@ -12,103 +12,115 @@ order	patch_no	decision	category	sha256	filename	reason
 11	401	skip	build/packaging	2abf7f97932076511f6a57a63e799dbd5cdb04f4136dfb0568ef35d33c55ec8b	0011-0021-PLESK-avoid-child-ignorance.patch	build/packaging glue, not a source security/bug backport
 12	402	skip	build/packaging	e40a3f65c713be533957fe152ce0ed9c533d5c73994a8e5c88e6ab68c149c983	0012-0022-PLESK-missed-kill.patch	build/packaging glue, not a source security/bug backport
 13	403	skip	build/packaging	585841a10b0c5ed70b76befa291404f88edce16cf0426327d32a8ac3cca67f30	0013-Update-libxml-include-file-references.patch	build/packaging glue, not a source security/bug backport
-14	210	skip	vendor/sapi	3fd750969ac7a0d2cf0aa569684f3bad912014196dd13db0d015daae2dde2f32	litespeed-8.0.1-process_lsapi_phpini.patch	CloudLinux/LiteSpeed/EA4 runtime- or SAPI-specific
-15	211	skip	vendor/sapi	491ef6f48877d858b0c061b19f6b0785333faee5089bc0eb0abccca85ddfe655	litespeed-8.0.1-userini_homedir.patch	CloudLinux/LiteSpeed/EA4 runtime- or SAPI-specific
-16	212	skip	vendor/sapi	2eaaf7625d16ecd79f3866d9a29a1c8a8ec53f973e22a770a3a69d6943cb566e	litespeed-8.0.1-log.patch	CloudLinux/LiteSpeed/EA4 runtime- or SAPI-specific
-17	213	skip	vendor/sapi	b19ddaf83c5bb2f1b87822fe94ee7fdf40040446ecbad6cc651aed39a38ad41d	litespeed-8.0.1.use_reject.patch	CloudLinux/LiteSpeed/EA4 runtime- or SAPI-specific
-18	215	skip	vendor/sapi	1c900b78ca1bfc3a4333aa1110e2f1dfe0c89c66551bf2e29287d0a110c69e7a	litespeed-8.0.1.avoid_zombies.patch	CloudLinux/LiteSpeed/EA4 runtime- or SAPI-specific
-19	216	skip	vendor/sapi	5ed0d8178d2c4172a3fed29c2a31efec1598b971517fc2b0b64f54fe73ce7da7	litespeed-8.0.1.dis_keeplistener.patch	CloudLinux/LiteSpeed/EA4 runtime- or SAPI-specific
-20	217	skip	vendor/sapi	5901f255dc1fd6a72dc8a9bd627a7b46c69057efa2b600fb2ee00bbc8d9a0db7	litespeed-8.0.1-graceful_stop.patch	CloudLinux/LiteSpeed/EA4 runtime- or SAPI-specific
-21	218	skip	vendor/sapi	796b4d8fded2bb7ac156be2e0a79959019feadf3a4679282eddf26484cc7d48c	litespeed-8.0.1.crash_limit.patch	CloudLinux/LiteSpeed/EA4 runtime- or SAPI-specific
+14	210	skip	vendor/sapi	9bda529c370864f63e813aeba752f107058ea41c9ee1b7e5a7a87537f96e3644	litespeed-8.0.1-process_lsapi_phpini.patch	CloudLinux/LiteSpeed/EA4 runtime- or SAPI-specific
+15	211	skip	vendor/sapi	1f01c3b0f1e0c4e6c5eca3c62878abf153dca43a2a869015c265754479633f7d	litespeed-8.0.1-userini_homedir.patch	CloudLinux/LiteSpeed/EA4 runtime- or SAPI-specific
+16	212	skip	vendor/sapi	d8604c92c40acdb680f717cfaa9135b882ffc00088651e6538490a3aa1f7c4a3	litespeed-8.0.1-log.patch	CloudLinux/LiteSpeed/EA4 runtime- or SAPI-specific
+17	213	skip	vendor/sapi	2f4aa28896f2ff99c6de6436fa215e51f2e221e087a5a07561fca1c40c1ba881	litespeed-8.0.1.use_reject.patch	CloudLinux/LiteSpeed/EA4 runtime- or SAPI-specific
+18	215	skip	vendor/sapi	86f98239b73b168f73d630734d37a5aaa1ae44b150eeed5fa7817c5007977aaf	litespeed-8.0.1.avoid_zombies.patch	CloudLinux/LiteSpeed/EA4 runtime- or SAPI-specific
+19	216	skip	vendor/sapi	46b0215acc34a5637d4a478be5fcb2195c2dea794ef0422f03485ef9abcae629	litespeed-8.0.1.dis_keeplistener.patch	CloudLinux/LiteSpeed/EA4 runtime- or SAPI-specific
+20	217	skip	vendor/sapi	420f72c10dc6dde98fed0088c912d34e7df92cfd2daac686249107da56ba9e10	litespeed-8.0.1-graceful_stop.patch	CloudLinux/LiteSpeed/EA4 runtime- or SAPI-specific
+21	218	skip	vendor/sapi	847ad299b7c4375f785f27469a026d1bf49a1183af06784cb5ab4cf442ab320e	litespeed-8.0.1.crash_limit.patch	CloudLinux/LiteSpeed/EA4 runtime- or SAPI-specific
 22	219	skip	vendor/sapi	fc6dbda1d4fdf7236778d5c3b9a6343e6ab810a47090e9688794ba9943aa10e0	litespeed-8.0.1-tsrmls.patch	CloudLinux/LiteSpeed/EA4 runtime- or SAPI-specific
-23	220	skip	vendor/sapi	2c2f4ee2a9531978d02188e8c433171a87610c7ba87e0dc2a69c0d1f781f85ec	litespeed-8.0.1-cloudlinux.patch	CloudLinux/LiteSpeed/EA4 runtime- or SAPI-specific
-24	221	skip	vendor/sapi	cb1f55c15df284b9c991fd2f594334df6c80b68d487db46fb58a9bf8d738ac5a	litespeed-8.0.1.wink_fix.patch	CloudLinux/LiteSpeed/EA4 runtime- or SAPI-specific
+23	220	skip	vendor/sapi	fa4419e11069a4c7f6fe391939d4288b50ba0994ced0c650b7d9d027d40c447a	litespeed-8.1-cloudlinux.patch	CloudLinux/LiteSpeed/EA4 runtime- or SAPI-specific
+24	221	skip	vendor/sapi	52cdc2e745a420cfa78c83ab482001371e9e8053d323169f65588f452b555136	litespeed-8.0.1.wink_fix.patch	CloudLinux/LiteSpeed/EA4 runtime- or SAPI-specific
 25	222	skip	vendor/sapi	a30f0094074c3605b9b204b2f6236c5c68c6a1511737c1a2b9be7bd8c5a8cfea	litespeed-8.0.1-move_override_ini.patch	CloudLinux/LiteSpeed/EA4 runtime- or SAPI-specific
-26	1000	skip	vendor/sapi	a34dd390e6867acd556b2cb7f33ae5b7297f04f909a4deb1b7cd8aeb0fad9324	cloudlinux-php-fpm.7.0.dl.ea-php.v4.patch	CloudLinux/LiteSpeed/EA4 runtime- or SAPI-specific
-27	1001	skip	build/packaging	26c782b5cdbdeb752b1ad4b99b84e76152129fcea043b937706249bb7bccc599	php-7.3.33-snmp-disable-des.patch	build/packaging glue, not a source security/bug backport
-28	1002	keep	forced	5830339a4de270def88ddba1449a5de0fc336908fbe2fd625bddacaef6645c09	php-7.3.33-fix-for-openssl-3.0.x.patch	force-kept via patches-local/include
-29	1012	keep	hardened	76e7acd2aa8057f710e90f33c2f5ba8b71ddfd6e6686b14863a49f1c3f21007c	hardened-php-7.2.34-bug73809.patch	
-30	1013	keep	hardened	628654b9d2e4256021dbc6fb51facd8a16e554d443f4dcd11e3c163b1aeb23a4	hardened-php-7.2.34-bug77322.patch	
-31	1014	keep	hardened	bf4280d348d262042724e4a39da638114b1bad545b318e79208548e162d2a771	hardened-php-7.2.34-bug77423.patch	
-32	1015	keep	hardened	55f9817f464a5f61b52b749aa25663af95787e31def529f6dd26c46545822743	hardened-php-7.2.34-bug77961.patch	
-33	1016	keep	hardened	3a71ae9017a0d639d9580d0d9771970e2f0399b9baf4c2fc91fd0c54880c552f	hardened-php-7.2.34-bug80366.patch	
-34	1017	keep	hardened	e9e6e2313922adbac1ff6448566a31ce9c27c886a02146bea86ae8f434974bbc	hardened-php-7.2.34-bug80411.patch	
-35	503	keep	hardened	c2d2b034687dd65c9cf9819f9750761d9b0c9d33dac2959fe8a4032e7d1ceece	hardened-bug80713.patch	
-36	504	keep	hardened	913402a789102088868eb328740fec071e65a45d867c9f06f6235e28bdf53a11	hardened-bug80024.patch	
-37	505	keep	hardened	cc019868e5ae0a297e8d46530f1be806781aa1f8c02b28d4707c7e56914714fc	hardened-bug70091.patch	
-38	506	keep	hardened	99132428d1c119ce73e3525379bf6acd85376fb8a69ded9dcf856d05f64f5179	hardened-bug75776.patch	
-39	507	keep	hardened	a92cc9021d1fd47af97f9a837296a72bd4b9fcedde27062065300f0771dd598b	hardened-bug80880.patch	
-40	508	keep	hardened	c66ec94249444928e0b0d794b30d6ecc26a1ce323fa147747f25294d16536508	hardened-bug80719.patch	
-41	509	keep	hardened	5fccf047e042e9e54a67d393958345ac5044b6c53bbd41c5cc6efccb5484ec41	hardened-bug80838.patch	
-42	510	keep	hardened	acaa8046eb2ed4893aa4e48bef2c8d74678b2d10ca74390de86cbe13c2767fc2	hardened-bug80763.patch	
-43	511	keep	hardened	c26410f98adf587c629792142962b38b358202851567f0ef7e9a4f8833d7cd80	hardened-bug80783.patch	
-44	512	keep	hardened	a706ab75b8610f2bb162d25119274bc30a2c8c40e1390e371416ea99d8738263	hardened-bug80950.patch	
-45	513	keep	hardened	0c36f1c38bf661d043d088fd299ce014e3574966613997ba2632bae776713e9f	hardened-bug80889.patch	
-46	514	keep	hardened	5537bd687e24926cde71a54aadc786de6f8db7561b7da0ce9b0a9bbcfb14473e	hardened-bug80747.patch	
-47	515	keep	hardened	10f643ed7f83a4bcd150e70085446ceb6585c732fd89c7475f805682f59d921d	hardened-bug79812.patch	
-48	516	keep	hardened	68441f48811b9166acf0a9bcbfb95c6996be429f711f380b1648e63312fc68e4	hardened-bug75850.patch	
-49	517	keep	hardened	79160e964612f8f7f2c521453564e21553e96d6b1551bf594c59eb0fb5bd63ec	hardened-bug51903.patch	
-50	518	keep	hardened	734b2326b673107c5b34d11f5c0971f8f785ae14219cda9a4b8ee5e8b3bb6608	hardened-bug78680.patch	
-51	519	keep	hardened	e7622a80c8f7d21808b73fe03d11ecfbe2476567d27954efd06ecc481beda3c5	hardened-bug80757.patch	
-52	520	keep	hardened	3638d2920025f505d4123b79267ff012e503caf4c70412b019045956487ad2a3	hardened-bug78719.patch	
-53	521	keep	hardened	bc8b071e3cf47cd4e2b8ea75f71a60a2d2c089cee4f5130f06d2f3ff85adf87b	hardened-bug74779.patch	
-54	522	keep	hardened	d6c4bf7eed7ce504b81753f7d614d9e1c39068d06c1d0f716612a863a44daedf	hardened-bug80915.patch	
-55	523	keep	hardened	ada189115e8f1061804f6289127cf5ce4fe071778e6dd913fbe821468db5ba30	hardened-bug53467.patch	
-56	524	keep	hardened	6bab60fd006056ee52c3a0ae7fd8bb10ae049df3d36c29e3f80baa8349cf147d	hardened-bug73533.patch	
-57	525	keep	hardened	401d52d10f6e8a9fb0c85fafd9535b20093ca627742ba6bc4482852741baf860	hardened-bug80817.patch	
-58	526	keep	hardened	e1417f86f9ae4c5a30eb8ccf139de67f3ea3dfd45bf39e2ae78c12c23da383e2	hardened-bug80654.patch	
-59	527	keep	hardened	b974b00edb1a208fd8324130ba145fa4b4a55d30b89f6f5642cdf66961a6399f	hardened-bug66783.patch	
-60	528	keep	hardened	7411c98ab978dab4bad81ede2cb688dbd43628ad0a060bb2017fcccbf3215da3	hardened-bug80771.patch	
-61	529	keep	hardened	694faa40d9abd6f71aae1d01ea3cf399b0e4c0497103109c0493ee8026735ddc	hardened-bug69668.patch	
-62	530	keep	hardened	876b21519088854e593592784644bcd2c13e05d32d8e4aba523ab50da602670b	hardened-bug76448.patch	
-63	531	keep	hardened	a5ea5836092ae9c622ccf55065cf7ea6f0c89961562496142052d99176f68a18	hardened-bug76452.patch	
-64	532	keep	hardened	81b0922909a2f4e3ec6c07d876d887299b22d00eea8a18a340e12b6a83e42deb	hardened-bug76450.patch	
-65	533	keep	hardened	58f5a4e9a8739ecefb3e817b16993e4530cd881534e8b34a4086f6c0cb2f111f	hardened-bug76449.patch	
-66	534	keep	hardened	ec8695e3ea7eb4642e7d34330046fbb81a7ebf9ed79f755aadb09564b23d0e16	hardened-72595.patch	
-67	535	keep	hardened	87c2be0799a10cb63ccb43191ec9121053bb18b9ddab615049a1ebd2dc5f84d6	hardened-81294.patch	
-68	536	keep	hardened	d5343c7bf3cea0f8a43b9c9466f2cf5e2b220003e9407c04819f6de4697ecd0a	hardened-81283.patch	
-69	537	keep	hardened	5f33a9f051383b90eb88a66f1668f8174fd2ff589a250264c85cfa86416fc931	hardened-81211.patch	
-70	538	keep	hardened	4aa96b481757c17239511dead27d733af7ce3e57a8d9cdf116012580550ac4fb	hardened-80849.patch	
-71	539	keep	hardened	ef27945d57b80cfda208fe4711e9670a3b7a11e0ee7ac0603d0268f4310422db	hardened-81305.patch	
-72	540	keep	hardened	ccbf53869ec0a044bbe5a9dfc17e828b95112fd867d18037d4adfaa10df716f7	hardened-66719.patch	
-73	541	keep	hardened	0f4abd7b639212f30c04b64c2cf0bc91ed5f3dc0183a40c849f38b6b3712c2e7	hardened-81252.patch	
-74	542	keep	hardened	d5634d02e50baf25271a0887c6170d2cf8a865e29cdee2e80bae9152cbe819bf	hardened-72146.patch	
-75	543	keep	hardened	d95535fa4a902a4ce03b2f974504cc05edba203db76195e589bc090c8740ff20	hardened-51498.patch	
-76	544	keep	CVE	c247259865b3f00f04ea94601e9e7c54da3ebdbbe01234749614a3517301f4ba	upstream-CVE-2021-21707.patch	
-77	545	keep	CVE	4fc7d8d35eebeae28e4f45caf4425a984ca5200d58a954a8e8eb803bde186cb1	upstream-cve-2021-21703.patch	
-78	546	keep	CVE	c77f53f005ec46c203f89f0d85ec6e49267190b4e2e9b93b0576d966baf8938e	php-7.0-CVE-2022-31625.patch	
-79	547	keep	CVE	b4772d7365a6d80c4dbdef88d38fbbbb453432992fa7d4888d91f74fb7940d1c	php-7.2-CVE-2022-31626.patch	
-80	548	keep	CVE	222459089738b6cb0683c1c85041ed9a561e9c8d30848b49d3d266459ccde0a4	php-7.0-CVE-2021-21705.patch	
-81	549	keep	CVE	7bd53fa03a521c17232f1cf631954119d084e8669a67227a1eeabc5d749f1bb7	php-upstream-CVE-2022-31629.patch	
-82	550	keep	CVE	5f54ac5334cd54480ac9d454052e445b1511e40e9c551defdb54d5fe8efd7cf8	php-7-CVE-2022-31628.patch	
-83	551	keep	CVE	6baddd232fef4fb881955e9424ae6896ed62258fa2bba2daaaca72e3c06a336b	php-7.4-CVE-2022-37454.patch	
-84	552	keep	CVE	cd0cedb0b9033627674acad6c8f105fb6fa1bfd88d2ad2fec2f78c26282deaa6	php-upstream-CVE-2022-31631.patch	
-85	553	keep	CVE	cba206ddb91d8e9e23fc1642aee77c03d0298495d19a7fa60ec5652a07576024	upstream-CVE-2023-0568.patch	
-86	554	keep	CVE	043a0722cab8559ed1a9fa6a92ebcaede30bb9e51901cdc576ceb78d0efa6787	php-7.0-CVE-2023-0662.patch	
-87	555	keep	CVE	b0009da9683d3b918f5b2170b86ff5187683024d03f78edca478569dc0e417a4	upstream-CVE-2023-0567.patch	
-88	556	keep	CVE	7dedb780e52a01bd9de84eaaf8a3406655b218211f15410219c75187fc6e36c4	php-7.3-CVE-2023-3823.patch	
-89	557	keep	CVE	1d5db885f62c714b7504baa35e1b57fb819b0a2882eefb870e59877d2e344100	php-upstream-CVE-2023-3824.patch	
-90	558	keep	CVE	62ab149637c316d14d75ba55e76b7bf7a65d7485e492b730cc2aa11a67512fc6	php-7.1-CVE-2023-3247.patch	
-91	559	keep	CVE	92acefa08f74d2e56bcf7a35bab0aa4db5a281eec92cf33eaab3ec31c09d8549	php-7.0-CVE-2024-2756.patch	
-92	560	keep	CVE	2f5b76f22f954ebb2321e43a604e791499970cfcd95338e1ff3bb69231cfaf30	php7.2-CVE-2024-3096.patch	
-93	561	keep	CVE	0046921b41186ed52f762b76ae819230512826437a09e643a6983a6a5beea096	php-7.2-CVE-2024-5458.patch	
-94	562	keep	CVE	ea097c8af63806a2798c6f01ea0cf4904b9f9b1d46ceb18d0ffe05d9f9f9b9b3	php-7.3-CVE-2024-8925.patch	
-95	563	keep	CVE	699324f2f8d70b81a933be46f26f8a9582adf5ace75a4c33d0872103c4af8da4	php-8.1-CVE-2024-8927.patch	
-96	564	keep	CVE	00a31b2bdaa88964a63c3c814ba1f0485b87ad029b94c2ba5d59c5ee2525310e	php-7.2-CVE-2024-11234.patch	
-97	565	keep	CVE	b3a3f0b3536a437b82edae39206f53e9abc1c23c91dd7c222ef92e3f1d4a32e9	php-8.2-CVE-2024-11233.patch	
-98	566	skip	build/packaging	3fa9ab462304d093c126fdadf57ea874ba524e6116dd9ec5861a99bedbfdf2d2	fix-bug-74267.patch	build/packaging glue, not a source security/bug backport
-99	567	skip	build/packaging	92a462b202d713d32be6148b9fdaacb3601acd64faa64c24f3b78b586bdc73f8	fix-bug-74960.patch	build/packaging glue, not a source security/bug backport
-100	568	keep	CVE	5afe3e5fa5093e61747a83eae871e01d21fa5480d354e18d5ac86f2e42acb995	php-7.3-CVE-2024-11236.patch	
-101	569	keep	CVE	829261c4400e1cba6e74d2975a4b1ba8594d5bead8b3b4eafb8c2c97754abb68	php-7.2-CVE-2024-8929.patch	
-102	570	keep	CVE	9032b7d5864c05da90174505a5211312ae0ec126ad2808f82dd6faf9b002696b	php-7.2-CVE-2017-8923.patch	
-103	571	keep	CVE	58d68c25a26d01e992d19912f53dddf74179afd79a374b69d2f3bc7502fa8cfe	php-7.2-CVE-2017-9120.patch	
-104	572	keep	CVE	f29b88ab9b64a086112b37bce1fcda49c37b16564d81b56600736076ab6443c6	php-7.3-CVE-2017-9118.patch	
-105	573	keep	CVE	a0522dbfa9a750082e72d292f845c232acda97219ee0cf5d617c1a5df1036183	php-7.2-CVE-2017-9119.patch	
-106	574	keep	CVE	3a089faee3d549dd728217049a7f8add5a0687b225ca0340ed2df8876df1c711	php-7.2-CVE-2025-1217_CVE-2025-1734_CVE-2025-1861.patch	
-107	575	keep	CVE	2852e0b95c971c893ea413a4d89556b618eb9afdc788751b2a530d810448c7e7	php-8.0-CVE-2025-1219.patch	
-108	576	keep	CVE	604d1f0e5409207b8481e3fd26b7fc119685f4713f14dae1d3efe950be1739cb	CVE-2019-19246.patch	
-109	577	keep	CVE	f9470b16318ed53d9e9c3884c214f6ac6324b4f028dae0ea9f1d55842c616ff4	CVE-2019-9025.patch	
-110	578	keep	CVE	ad99577138c10c88d12325654b0ee28e0f4bba31ffa84e1673c9f104416a332b	php72-CVE-2025-1220.patch	
-111	579	keep	CVE	cc2e2cbf7cde55ff9b2657a81b0e31324edff8a267fffc2552737b9b5f110081	php74-CVE-2025-6491.patch	
-112	580	keep	CVE	eb20f44fdacbe76e801e6bbecb936b2f7f0faa1aae918ac63401476b3b5b1068	CVE-2025-14178.patch	
-113	16	skip	build/packaging	39e8a332ec572f00a63f63266e6a66db296c7b507de5c0416e99e27034c8706a	0016-Fix-libxml2-v2.15.0-compatibility.patch	build/packaging glue, not a source security/bug backport
+26	223	skip	vendor/sapi	18c203d514bb5658088df99273b1a9a74923bdcaee04d3a01c72397407d5b344	litespeed-8.3-document_root_env.patch	CloudLinux/LiteSpeed/EA4 runtime- or SAPI-specific
+27	1000	skip	vendor/sapi	a34dd390e6867acd556b2cb7f33ae5b7297f04f909a4deb1b7cd8aeb0fad9324	cloudlinux-php-fpm.7.0.dl.ea-php.v4.patch	CloudLinux/LiteSpeed/EA4 runtime- or SAPI-specific
+28	1001	skip	build/packaging	26c782b5cdbdeb752b1ad4b99b84e76152129fcea043b937706249bb7bccc599	php-7.3.33-snmp-disable-des.patch	build/packaging glue, not a source security/bug backport
+29	1002	keep	forced	5830339a4de270def88ddba1449a5de0fc336908fbe2fd625bddacaef6645c09	php-7.3.33-fix-for-openssl-3.0.x.patch	force-kept via patches-local/include
+30	1012	keep	hardened	76e7acd2aa8057f710e90f33c2f5ba8b71ddfd6e6686b14863a49f1c3f21007c	hardened-php-7.2.34-bug73809.patch	
+31	1013	keep	hardened	628654b9d2e4256021dbc6fb51facd8a16e554d443f4dcd11e3c163b1aeb23a4	hardened-php-7.2.34-bug77322.patch	
+32	1014	keep	hardened	bf4280d348d262042724e4a39da638114b1bad545b318e79208548e162d2a771	hardened-php-7.2.34-bug77423.patch	
+33	1015	keep	hardened	55f9817f464a5f61b52b749aa25663af95787e31def529f6dd26c46545822743	hardened-php-7.2.34-bug77961.patch	
+34	1016	keep	hardened	3a71ae9017a0d639d9580d0d9771970e2f0399b9baf4c2fc91fd0c54880c552f	hardened-php-7.2.34-bug80366.patch	
+35	1017	keep	hardened	e9e6e2313922adbac1ff6448566a31ce9c27c886a02146bea86ae8f434974bbc	hardened-php-7.2.34-bug80411.patch	
+36	503	keep	hardened	c2d2b034687dd65c9cf9819f9750761d9b0c9d33dac2959fe8a4032e7d1ceece	hardened-bug80713.patch	
+37	504	keep	hardened	913402a789102088868eb328740fec071e65a45d867c9f06f6235e28bdf53a11	hardened-bug80024.patch	
+38	505	keep	hardened	cc019868e5ae0a297e8d46530f1be806781aa1f8c02b28d4707c7e56914714fc	hardened-bug70091.patch	
+39	506	keep	hardened	99132428d1c119ce73e3525379bf6acd85376fb8a69ded9dcf856d05f64f5179	hardened-bug75776.patch	
+40	507	keep	hardened	a92cc9021d1fd47af97f9a837296a72bd4b9fcedde27062065300f0771dd598b	hardened-bug80880.patch	
+41	508	keep	hardened	c66ec94249444928e0b0d794b30d6ecc26a1ce323fa147747f25294d16536508	hardened-bug80719.patch	
+42	509	keep	hardened	5fccf047e042e9e54a67d393958345ac5044b6c53bbd41c5cc6efccb5484ec41	hardened-bug80838.patch	
+43	510	keep	hardened	acaa8046eb2ed4893aa4e48bef2c8d74678b2d10ca74390de86cbe13c2767fc2	hardened-bug80763.patch	
+44	511	keep	hardened	c26410f98adf587c629792142962b38b358202851567f0ef7e9a4f8833d7cd80	hardened-bug80783.patch	
+45	512	keep	hardened	a706ab75b8610f2bb162d25119274bc30a2c8c40e1390e371416ea99d8738263	hardened-bug80950.patch	
+46	513	keep	hardened	0c36f1c38bf661d043d088fd299ce014e3574966613997ba2632bae776713e9f	hardened-bug80889.patch	
+47	514	keep	hardened	5537bd687e24926cde71a54aadc786de6f8db7561b7da0ce9b0a9bbcfb14473e	hardened-bug80747.patch	
+48	515	keep	hardened	10f643ed7f83a4bcd150e70085446ceb6585c732fd89c7475f805682f59d921d	hardened-bug79812.patch	
+49	516	keep	hardened	68441f48811b9166acf0a9bcbfb95c6996be429f711f380b1648e63312fc68e4	hardened-bug75850.patch	
+50	517	keep	hardened	79160e964612f8f7f2c521453564e21553e96d6b1551bf594c59eb0fb5bd63ec	hardened-bug51903.patch	
+51	518	keep	hardened	734b2326b673107c5b34d11f5c0971f8f785ae14219cda9a4b8ee5e8b3bb6608	hardened-bug78680.patch	
+52	519	keep	hardened	e7622a80c8f7d21808b73fe03d11ecfbe2476567d27954efd06ecc481beda3c5	hardened-bug80757.patch	
+53	520	keep	hardened	3638d2920025f505d4123b79267ff012e503caf4c70412b019045956487ad2a3	hardened-bug78719.patch	
+54	521	keep	hardened	bc8b071e3cf47cd4e2b8ea75f71a60a2d2c089cee4f5130f06d2f3ff85adf87b	hardened-bug74779.patch	
+55	522	keep	hardened	d6c4bf7eed7ce504b81753f7d614d9e1c39068d06c1d0f716612a863a44daedf	hardened-bug80915.patch	
+56	523	keep	hardened	ada189115e8f1061804f6289127cf5ce4fe071778e6dd913fbe821468db5ba30	hardened-bug53467.patch	
+57	524	keep	hardened	6bab60fd006056ee52c3a0ae7fd8bb10ae049df3d36c29e3f80baa8349cf147d	hardened-bug73533.patch	
+58	525	keep	hardened	401d52d10f6e8a9fb0c85fafd9535b20093ca627742ba6bc4482852741baf860	hardened-bug80817.patch	
+59	526	keep	hardened	e1417f86f9ae4c5a30eb8ccf139de67f3ea3dfd45bf39e2ae78c12c23da383e2	hardened-bug80654.patch	
+60	527	keep	hardened	b974b00edb1a208fd8324130ba145fa4b4a55d30b89f6f5642cdf66961a6399f	hardened-bug66783.patch	
+61	528	keep	hardened	7411c98ab978dab4bad81ede2cb688dbd43628ad0a060bb2017fcccbf3215da3	hardened-bug80771.patch	
+62	529	keep	hardened	694faa40d9abd6f71aae1d01ea3cf399b0e4c0497103109c0493ee8026735ddc	hardened-bug69668.patch	
+63	530	keep	hardened	876b21519088854e593592784644bcd2c13e05d32d8e4aba523ab50da602670b	hardened-bug76448.patch	
+64	531	keep	hardened	a5ea5836092ae9c622ccf55065cf7ea6f0c89961562496142052d99176f68a18	hardened-bug76452.patch	
+65	532	keep	hardened	81b0922909a2f4e3ec6c07d876d887299b22d00eea8a18a340e12b6a83e42deb	hardened-bug76450.patch	
+66	533	keep	hardened	58f5a4e9a8739ecefb3e817b16993e4530cd881534e8b34a4086f6c0cb2f111f	hardened-bug76449.patch	
+67	534	keep	hardened	ec8695e3ea7eb4642e7d34330046fbb81a7ebf9ed79f755aadb09564b23d0e16	hardened-72595.patch	
+68	535	keep	hardened	87c2be0799a10cb63ccb43191ec9121053bb18b9ddab615049a1ebd2dc5f84d6	hardened-81294.patch	
+69	536	keep	hardened	d5343c7bf3cea0f8a43b9c9466f2cf5e2b220003e9407c04819f6de4697ecd0a	hardened-81283.patch	
+70	537	keep	hardened	5f33a9f051383b90eb88a66f1668f8174fd2ff589a250264c85cfa86416fc931	hardened-81211.patch	
+71	538	keep	hardened	4aa96b481757c17239511dead27d733af7ce3e57a8d9cdf116012580550ac4fb	hardened-80849.patch	
+72	539	keep	hardened	ef27945d57b80cfda208fe4711e9670a3b7a11e0ee7ac0603d0268f4310422db	hardened-81305.patch	
+73	540	keep	hardened	ccbf53869ec0a044bbe5a9dfc17e828b95112fd867d18037d4adfaa10df716f7	hardened-66719.patch	
+74	541	keep	hardened	0f4abd7b639212f30c04b64c2cf0bc91ed5f3dc0183a40c849f38b6b3712c2e7	hardened-81252.patch	
+75	542	keep	hardened	d5634d02e50baf25271a0887c6170d2cf8a865e29cdee2e80bae9152cbe819bf	hardened-72146.patch	
+76	543	keep	hardened	d95535fa4a902a4ce03b2f974504cc05edba203db76195e589bc090c8740ff20	hardened-51498.patch	
+77	544	keep	CVE	c247259865b3f00f04ea94601e9e7c54da3ebdbbe01234749614a3517301f4ba	upstream-CVE-2021-21707.patch	
+78	545	keep	CVE	4fc7d8d35eebeae28e4f45caf4425a984ca5200d58a954a8e8eb803bde186cb1	upstream-cve-2021-21703.patch	
+79	546	keep	CVE	c77f53f005ec46c203f89f0d85ec6e49267190b4e2e9b93b0576d966baf8938e	php-7.0-CVE-2022-31625.patch	
+80	547	keep	CVE	b4772d7365a6d80c4dbdef88d38fbbbb453432992fa7d4888d91f74fb7940d1c	php-7.2-CVE-2022-31626.patch	
+81	548	keep	CVE	222459089738b6cb0683c1c85041ed9a561e9c8d30848b49d3d266459ccde0a4	php-7.0-CVE-2021-21705.patch	
+82	549	keep	CVE	7bd53fa03a521c17232f1cf631954119d084e8669a67227a1eeabc5d749f1bb7	php-upstream-CVE-2022-31629.patch	
+83	550	keep	CVE	5f54ac5334cd54480ac9d454052e445b1511e40e9c551defdb54d5fe8efd7cf8	php-7-CVE-2022-31628.patch	
+84	551	keep	CVE	6baddd232fef4fb881955e9424ae6896ed62258fa2bba2daaaca72e3c06a336b	php-7.4-CVE-2022-37454.patch	
+85	552	keep	CVE	cd0cedb0b9033627674acad6c8f105fb6fa1bfd88d2ad2fec2f78c26282deaa6	php-upstream-CVE-2022-31631.patch	
+86	553	keep	CVE	cba206ddb91d8e9e23fc1642aee77c03d0298495d19a7fa60ec5652a07576024	upstream-CVE-2023-0568.patch	
+87	554	keep	CVE	043a0722cab8559ed1a9fa6a92ebcaede30bb9e51901cdc576ceb78d0efa6787	php-7.0-CVE-2023-0662.patch	
+88	555	keep	CVE	b0009da9683d3b918f5b2170b86ff5187683024d03f78edca478569dc0e417a4	upstream-CVE-2023-0567.patch	
+89	556	keep	CVE	7dedb780e52a01bd9de84eaaf8a3406655b218211f15410219c75187fc6e36c4	php-7.3-CVE-2023-3823.patch	
+90	557	keep	CVE	1d5db885f62c714b7504baa35e1b57fb819b0a2882eefb870e59877d2e344100	php-upstream-CVE-2023-3824.patch	
+91	558	keep	CVE	62ab149637c316d14d75ba55e76b7bf7a65d7485e492b730cc2aa11a67512fc6	php-7.1-CVE-2023-3247.patch	
+92	559	keep	CVE	92acefa08f74d2e56bcf7a35bab0aa4db5a281eec92cf33eaab3ec31c09d8549	php-7.0-CVE-2024-2756.patch	
+93	560	keep	CVE	2f5b76f22f954ebb2321e43a604e791499970cfcd95338e1ff3bb69231cfaf30	php7.2-CVE-2024-3096.patch	
+94	561	keep	CVE	0046921b41186ed52f762b76ae819230512826437a09e643a6983a6a5beea096	php-7.2-CVE-2024-5458.patch	
+95	562	keep	CVE	ea097c8af63806a2798c6f01ea0cf4904b9f9b1d46ceb18d0ffe05d9f9f9b9b3	php-7.3-CVE-2024-8925.patch	
+96	563	keep	CVE	699324f2f8d70b81a933be46f26f8a9582adf5ace75a4c33d0872103c4af8da4	php-8.1-CVE-2024-8927.patch	
+97	564	keep	CVE	00a31b2bdaa88964a63c3c814ba1f0485b87ad029b94c2ba5d59c5ee2525310e	php-7.2-CVE-2024-11234.patch	
+98	565	keep	CVE	b3a3f0b3536a437b82edae39206f53e9abc1c23c91dd7c222ef92e3f1d4a32e9	php-8.2-CVE-2024-11233.patch	
+99	566	skip	build/packaging	3fa9ab462304d093c126fdadf57ea874ba524e6116dd9ec5861a99bedbfdf2d2	fix-bug-74267.patch	build/packaging glue, not a source security/bug backport
+100	567	skip	build/packaging	92a462b202d713d32be6148b9fdaacb3601acd64faa64c24f3b78b586bdc73f8	fix-bug-74960.patch	build/packaging glue, not a source security/bug backport
+101	568	keep	CVE	5afe3e5fa5093e61747a83eae871e01d21fa5480d354e18d5ac86f2e42acb995	php-7.3-CVE-2024-11236.patch	
+102	569	keep	CVE	829261c4400e1cba6e74d2975a4b1ba8594d5bead8b3b4eafb8c2c97754abb68	php-7.2-CVE-2024-8929.patch	
+103	570	keep	CVE	9032b7d5864c05da90174505a5211312ae0ec126ad2808f82dd6faf9b002696b	php-7.2-CVE-2017-8923.patch	
+104	571	keep	CVE	58d68c25a26d01e992d19912f53dddf74179afd79a374b69d2f3bc7502fa8cfe	php-7.2-CVE-2017-9120.patch	
+105	572	keep	CVE	f29b88ab9b64a086112b37bce1fcda49c37b16564d81b56600736076ab6443c6	php-7.3-CVE-2017-9118.patch	
+106	573	keep	CVE	a0522dbfa9a750082e72d292f845c232acda97219ee0cf5d617c1a5df1036183	php-7.2-CVE-2017-9119.patch	
+107	574	keep	CVE	3a089faee3d549dd728217049a7f8add5a0687b225ca0340ed2df8876df1c711	php-7.2-CVE-2025-1217_CVE-2025-1734_CVE-2025-1861.patch	
+108	575	keep	CVE	2852e0b95c971c893ea413a4d89556b618eb9afdc788751b2a530d810448c7e7	php-8.0-CVE-2025-1219.patch	
+109	576	keep	CVE	604d1f0e5409207b8481e3fd26b7fc119685f4713f14dae1d3efe950be1739cb	CVE-2019-19246.patch	
+110	577	keep	CVE	f9470b16318ed53d9e9c3884c214f6ac6324b4f028dae0ea9f1d55842c616ff4	CVE-2019-9025.patch	
+111	578	keep	CVE	ad99577138c10c88d12325654b0ee28e0f4bba31ffa84e1673c9f104416a332b	php72-CVE-2025-1220.patch	
+112	579	keep	CVE	cc2e2cbf7cde55ff9b2657a81b0e31324edff8a267fffc2552737b9b5f110081	php74-CVE-2025-6491.patch	
+113	580	keep	CVE	eb20f44fdacbe76e801e6bbecb936b2f7f0faa1aae918ac63401476b3b5b1068	CVE-2025-14178.patch	
+114	16	skip	build/packaging	39e8a332ec572f00a63f63266e6a66db296c7b507de5c0416e99e27034c8706a	0016-Fix-libxml2-v2.15.0-compatibility.patch	build/packaging glue, not a source security/bug backport
+115	1100	keep	CVE	1b68d9c0de9eaf6554f34156b65cc9571c5c992ec97506c4b0489befe15a287c	php-7.2-CVE-2026-6722.patch	
+116	1101	keep	CVE	b2d2ad35af859440944b5e5e77b0451ff3d4d360320a3e494dde6e481e5725f3	php-7.2-CVE-2026-7262.patch	
+117	1102	keep	CVE	e3d99f3cf969e0a5a1d1c5d22214d2ddc5005a72251f02c1155d5f711f714d65	php-7.2-CVE-2026-6735.patch	
+118	1103	keep	CVE	797c9105f07163d2854b0c51aed56d82b23ecd2d1b9eef0703822f494677b01e	php-7.2-CVE-2026-7261.patch	
+119	1104	keep	CVE	09ebbc42b5e90e0be0bc4fd1948705c71bae51ac8f84ee1b87d9b2fe6e94181e	php-7.2-CVE-2026-7568.patch	
+120	1105	keep	CVE	6c15466d820896d26a6b2d598b6046fd9397ca01c8aa1df5a944b0d6c2045b77	php-7.2-CVE-2026-14355.patch	
+121	1106	skip	build/packaging	b73fd563191e7bd7f825e51e331e25179d1e61b75ee2aad514ff8bde05c4f1ac	php-7.2.34-caching-sha2-password.patch	build/packaging glue, not a source security/bug backport
+122	1107	keep	CVE	048a4e15912de1e5b0155f3888f9e523adf83b24fe87840d9140af20680d04cf	php-7.2-CVE-2026-9672.patch	
+123	1108	keep	CVE	c7661b9632ab944e0e08dfef17c6a5975bf82cdef87a5ca56d965d928d45a4ab	php-7.2-CVE-2026-17543.patch	
+124	1109	keep	CVE	4233196acdc36ac8e7bfc43723905d2e6d221c80123fe3e486a804f18da0e8c7	php-7.2-CVE-2026-7260.patch	
+125	1110	keep	CVE	9a225ad53044296a37bcb31805c8df540d3cdfb037bd46a1d0525295418e3451	php-7.2-CVE-2026-109618-109619.patch	
