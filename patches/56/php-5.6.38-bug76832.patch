@@ -1,0 +1,30 @@
+commit f26172f9343cf49d62bbefff355bb76d6adf7ebe
+Author: Anatol Belski <ab@php.net>
+Date:   Mon Sep 3 15:09:23 2018 +0200
+
+    Fixed bug #76832 ZendOPcache.MemoryBase periodically deleted by the OS
+
+diff --git a/ext/opcache/shared_alloc_win32.c b/ext/opcache/shared_alloc_win32.c
+index 89b5df3..5207a59 100644
+--- a/ext/opcache/shared_alloc_win32.c
++++ b/ext/opcache/shared_alloc_win32.c
+@@ -22,6 +22,7 @@
+ #include "ZendAccelerator.h"
+ #include "zend_shared_alloc.h"
+ #include "zend_accelerator_util_funcs.h"
++#include "tsrm_win32.h"
+ #include <winbase.h>
+ #include <process.h>
+ #include <LMCONS.H>
+@@ -159,6 +160,11 @@ static int zend_shared_alloc_reattach(size_t requested_size, char **error_in)
+ 	}
+ 	fclose(fp);
+ 
++	if (0 > win32_utime(mmap_base_file, NULL)) {
++		err = GetLastError();
++		zend_win_error_message(ACCEL_LOG_WARNING, mmap_base_file, err);
++	}
++
+ 	/* Check if the requested address space is free */
+ 	if (VirtualQuery(wanted_mapping_base, &info, sizeof(info)) == 0 ||
+ 	    info.State != MEM_FREE ||

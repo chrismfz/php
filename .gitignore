@@ -18,3 +18,6 @@ build/
 *.swp
 .idea/
 .DS_Store
+
+# cPanel SCL packages built by deploy-cpanel.sh
+dist/

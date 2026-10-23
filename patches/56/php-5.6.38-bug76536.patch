@@ -1,0 +1,32 @@
+commit 1f6b842af430b8cbba0fb1c38a2796ab399171c3
+Author: Xinchen Hui <laruence@gmail.com>
+Date:   Thu Jun 28 12:37:33 2018 +0800
+
+    Fixed bug #76536 (PHP crashes with core dump when throwing exception in error handler). (Laruence)
+
+diff --git a/ext/reflection/tests/bug76536.phpt b/ext/reflection/tests/bug76536.phpt
+new file mode 100644
+index 0000000..9f3b3fd
+--- /dev/null
++++ b/ext/reflection/tests/bug76536.phpt
+@@ -0,0 +1,20 @@
++--TEST--
++Bug #76536 (PHP crashes with core dump when throwing exception in error handler)
++--FILE--
++<?php
++class SomeConstants {const SOME_CONSTANT = SOME_NONSENSE;}
++
++function handleError() {throw new ErrorException();}
++
++set_error_handler('handleError');
++set_exception_handler('handleError');
++
++$r = new \ReflectionClass(SomeConstants::class);
++$r->getConstants();
++?>
++--EXPECTF--
++Fatal error: Uncaught ErrorException in %sbug76536.php:%d
++Stack trace:
++#0 [internal function]: handleError(Object(ErrorException))
++#1 {main}
++  thrown in %sbug76536.php on line %d

@@ -1,0 +1,23 @@
+commit 30eb4b3563f508019d306c3c62311f43d4ce6682
+Author: Christoph M. Becker <cmbecker69@gmx.de>
+Date:   Mon Jul 29 08:48:13 2019 +0200
+
+    Fix #78342: Bus error in configure test for iconv //IGNORE
+    
+    We have to check the return value of iconv_open() for error, to avoid
+    that and potentially other undesired behavior of iconv().
+
+diff --git a/ext/iconv/config.m4 b/ext/iconv/config.m4
+index 6a056979e7..10b4e549fd 100644
+--- a/ext/iconv/config.m4
++++ b/ext/iconv/config.m4
+@@ -166,6 +166,9 @@ int main() {
+ 
+ int main() {
+   iconv_t cd = iconv_open( "UTF-8//IGNORE", "UTF-8" );
++  if(cd == (iconv_t)-1) {
++    return 1;
++  }
+   char *in_p = "\xC3\xC3\xC3\xB8";
+   size_t in_left = 4, out_left = 4096;
+   char *out = malloc(out_left);

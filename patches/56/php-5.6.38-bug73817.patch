@@ -1,0 +1,411 @@
+commit 0f8c1ee76d5d2aa90bf667215e41eed60ca6cbcd
+Author: Christoph M. Becker <cmbecker69@gmx.de>
+Date:   Sun Jul 15 23:06:38 2018 +0200
+
+    Fix #73817: Incorrect entries in get_html_translation_table
+    
+    Due to incorrect string termination and length handling, several HTML
+    entities missed the trailing semicolon.
+    
+    We also fix the obviously wrong expectations in two already existing
+    tests.
+
+diff --git a/NEWS b/NEWS
+index edd60bd..e359a8c 100644
+--- a/NEWS
++++ b/NEWS
+@@ -9,6 +9,9 @@ PHP                                                                        NEWS
+ - PDO_Firebird:
+   . Fixed bug #76488 (Memory leak when fetching a BLOB field). (Simonov Denis)
+ 
++- Standard:
++  . Fixed bug #73817 (Incorrect entries in get_html_translation_table). (cmb)
++
+ - Zip:
+   . Fixed bug #76524 (ZipArchive memory leak (OVERWRITE flag and empty archive)).
+     (Timur Ibragimov)
+diff --git a/ext/standard/html.c b/ext/standard/html.c
+index 62b070b..7d6567f 100644
+--- a/ext/standard/html.c
++++ b/ext/standard/html.c
+@@ -1598,8 +1598,7 @@ static inline void write_s3row_data(
+ 			written_k2 = write_octet_sequence((unsigned char*)&key[written_k1], charset, spe_cp);
+ 			memcpy(&entity[1], mcpr[i].normal_entry.entity, l);
+ 			entity[l + 1] = ';';
+-			entity[l + 1] = '\0';
+-			add_assoc_stringl_ex(arr, key, written_k1 + written_k2 + 1, entity, l + 1, 1);
++			add_assoc_stringl_ex(arr, key, written_k1 + written_k2 + 1, entity, l + 2, 1);
+ 		}
+ 	}
+ }
+diff --git a/ext/standard/tests/strings/bug73817.phpt b/ext/standard/tests/strings/bug73817.phpt
+new file mode 100644
+index 0000000..3ca5762
+--- /dev/null
++++ b/ext/standard/tests/strings/bug73817.phpt
+@@ -0,0 +1,14 @@
++--TEST--
++Bug #73817 (Incorrect entries in get_html_translation_table)
++--FILE--
++<?php
++$entities = get_html_translation_table( HTML_ENTITIES, ENT_QUOTES | ENT_HTML5);
++foreach ($entities as $entity) {
++    if (substr($entity, -1) !== ';') {
++        var_dump($entity);
++    }
++}
++?>
++===DONE===
++--EXPECT--
++===DONE===
+diff --git a/ext/standard/tests/strings/get_html_translation_table_basic5.phpt b/ext/standard/tests/strings/get_html_translation_table_basic5.phpt
+index c7a9622..e604430 100644
+--- a/ext/standard/tests/strings/get_html_translation_table_basic5.phpt
++++ b/ext/standard/tests/strings/get_html_translation_table_basic5.phpt
+@@ -273,27 +273,27 @@ Array
+     [≢] => &NotCongruent;
+     [≭] => &NotCupCap;
+     [≠] => &NotEqual;
+-    [≧̸] => &NotGreaterFullEqual
+-    [≫̸] => &NotGreaterGreater
++    [≧̸] => &NotGreaterFullEqual;
++    [≫̸] => &NotGreaterGreater;
+     [≹] => &NotGreaterLess;
+-    [⧏̸] => &NotLeftTriangleBar
++    [⧏̸] => &NotLeftTriangleBar;
+     [≮] => &NotLess;
+     [≰] => &NotLessEqual;
+-    [⪢̸] => &NotNestedGreaterGreater
+-    [⪡̸] => &NotNestedLessLess
+-    [⪯̸] => &NotPrecedesEqual
++    [⪢̸] => &NotNestedGreaterGreater;
++    [⪡̸] => &NotNestedLessLess;
++    [⪯̸] => &NotPrecedesEqual;
+     [⋠] => &NotPrecedesSlantEqual;
+-    [⧐̸] => &NotRightTriangleBar
++    [⧐̸] => &NotRightTriangleBar;
+     [⋭] => &NotRightTriangleEqual;
+-    [⊏̸] => &NotSquareSubset
++    [⊏̸] => &NotSquareSubset;
+     [⋢] => &NotSquareSubsetEqual;
+-    [⊐̸] => &NotSquareSuperset
++    [⊐̸] => &NotSquareSuperset;
+     [⋣] => &NotSquareSupersetEqual;
+     [⊈] => &NotSubsetEqual;
+     [⊁] => &NotSucceeds;
+-    [⪰̸] => &NotSucceedsEqual
++    [⪰̸] => &NotSucceedsEqual;
+     [⋡] => &NotSucceedsSlantEqual;
+-    [≿̸] => &NotSucceedsTilde
++    [≿̸] => &NotSucceedsTilde;
+     [⊉] => &NotSupersetEqual;
+     [≁] => &NotTilde;
+     [𝒩] => &Nscr;
+@@ -394,7 +394,7 @@ Array
+     [Т] => &Tcy;
+     [𝔗] => &Tfr;
+     [Θ] => &Theta;
+-    [  ] => &ThickSpace
++    [  ] => &ThickSpace;
+     [ ] => &ThinSpace;
+     [≅] => &TildeFullEqual;
+     [𝕋] => &Topf;
+@@ -469,7 +469,7 @@ Array
+     [á] => &aacute;
+     [ă] => &abreve;
+     [∾] => &ac;
+-    [∾̳] => &acE
++    [∾̳] => &acE;
+     [∿] => &acd;
+     [â] => &acirc;
+     [а] => &acy;
+@@ -552,8 +552,8 @@ Array
+     [░] => &blk14;
+     [▓] => &blk34;
+     [█] => &block;
+-    [=⃥] => &bne
+-    [≡⃥] => &bnequiv
++    [=⃥] => &bne;
++    [≡⃥] => &bnequiv;
+     [⌐] => &bnot;
+     [𝕓] => &bopf;
+     [⋈] => &bowtie;
+@@ -616,7 +616,7 @@ Array
+     [⩋] => &capcap;
+     [⩇] => &capcup;
+     [⩀] => &capdot;
+-    [∩︀] => &caps
++    [∩︀] => &caps;
+     [⁁] => &caret;
+     [⩍] => &ccaps;
+     [č] => &ccaron;
+@@ -668,7 +668,7 @@ Array
+     [⩊] => &cupcup;
+     [⊍] => &cupdot;
+     [⩅] => &cupor;
+-    [∪︀] => &cups
++    [∪︀] => &cups;
+     [↷] => &curarr;
+     [⤼] => &curarrm;
+     [⋞] => &curlyeqprec;
+@@ -772,7 +772,7 @@ Array
+     [ﬄ] => &ffllig;
+     [𝔣] => &ffr;
+     [ﬁ] => &filig;
+-    [fj] => &fjlig
++    [fj] => &fjlig;
+     [♭] => &flat;
+     [ﬂ] => &fllig;
+     [▱] => &fltns;
+@@ -814,7 +814,7 @@ Array
+     [⪀] => &gesdot;
+     [⪂] => &gesdoto;
+     [⪄] => &gesdotol;
+-    [⋛︀] => &gesl
++    [⋛︀] => &gesl;
+     [⪔] => &gesles;
+     [𝔤] => &gfr;
+     [≫] => &gg;
+@@ -841,7 +841,7 @@ Array
+     [⥸] => &gtrarr;
+     [⋗] => &gtrdot;
+     [⋛] => &gtreqless;
+-    [≩︀] => &gvertneqq
++    [≩︀] => &gvertneqq;
+     [⇔] => &hArr;
+     [ ] => &hairsp;
+     [½] => &half;
+@@ -940,7 +940,7 @@ Array
+     [⪫] => &lat;
+     [⤙] => &latail;
+     [⪭] => &late;
+-    [⪭︀] => &lates
++    [⪭︀] => &lates;
+     [⤌] => &lbarr;
+     [❲] => &lbbrk;
+     [{] => &lbrace;
+@@ -965,7 +965,7 @@ Array
+     [⩿] => &lesdot;
+     [⪁] => &lesdoto;
+     [⪃] => &lesdotor;
+-    [⋚︀] => &lesg
++    [⋚︀] => &lesg;
+     [⪓] => &lesges;
+     [⋖] => &lessdot;
+     [⋚] => &lesseqgtr;
+@@ -1022,7 +1022,7 @@ Array
+     [◃] => &ltri;
+     [⥊] => &lurdshar;
+     [⥦] => &luruhar;
+-    [≨︀] => &lvertneqq
++    [≨︀] => &lvertneqq;
+     [∺] => &mDDot;
+     [¯] => &macr;
+     [♂] => &male;
+@@ -1046,42 +1046,42 @@ Array
+     [𝓂] => &mscr;
+     [μ] => &mu;
+     [⊸] => &mumap;
+-    [⋙̸] => &nGg
+-    [≫⃒] => &nGt
++    [⋙̸] => &nGg;
++    [≫⃒] => &nGt;
+     [⇍] => &nLeftarrow;
+-    [⋘̸] => &nLl
+-    [≪⃒] => &nLt
+-    [≪̸] => &nLtv
++    [⋘̸] => &nLl;
++    [≪⃒] => &nLt;
++    [≪̸] => &nLtv;
+     [⊯] => &nVDash;
+     [⊮] => &nVdash;
+     [∇] => &nabla;
+     [ń] => &nacute;
+-    [∠⃒] => &nang
+-    [⩰̸] => &napE
+-    [≋̸] => &napid
++    [∠⃒] => &nang;
++    [⩰̸] => &napE;
++    [≋̸] => &napid;
+     [ŉ] => &napos;
+     [≉] => &napprox;
+     [♮] => &natur;
+     [ℕ] => &naturals;
+     [ ] => &nbsp;
+-    [≎̸] => &nbump
+-    [≏̸] => &nbumpe
++    [≎̸] => &nbump;
++    [≏̸] => &nbumpe;
+     [⩃] => &ncap;
+     [ň] => &ncaron;
+     [ņ] => &ncedil;
+     [≇] => &ncong;
+-    [⩭̸] => &ncongdot
++    [⩭̸] => &ncongdot;
+     [⩂] => &ncup;
+     [н] => &ncy;
+     [–] => &ndash;
+     [⇗] => &neArr;
+     [⤤] => &nearhk;
+-    [≐̸] => &nedot
+-    [≂̸] => &nesim
++    [≐̸] => &nedot;
++    [≂̸] => &nesim;
+     [∄] => &nexist;
+     [𝔫] => &nfr;
+     [≱] => &ngeq;
+-    [⩾̸] => &nges
++    [⩾̸] => &nges;
+     [≵] => &ngsim;
+     [≯] => &ngtr;
+     [⇎] => &nhArr;
+@@ -1089,41 +1089,41 @@ Array
+     [⋼] => &nis;
+     [⋺] => &nisd;
+     [њ] => &njcy;
+-    [≦̸] => &nlE
++    [≦̸] => &nlE;
+     [‥] => &nldr;
+     [↚] => &nleftarrow;
+     [↮] => &nleftrightarrow;
+-    [⩽̸] => &nles
++    [⩽̸] => &nles;
+     [≴] => &nlsim;
+     [⋪] => &nltri;
+     [⋬] => &nltrie;
+     [𝕟] => &nopf;
+     [¬] => &not;
+     [∉] => &notin;
+-    [⋹̸] => &notinE
+-    [⋵̸] => &notindot
++    [⋹̸] => &notinE;
++    [⋵̸] => &notindot;
+     [⋷] => &notinvb;
+     [⋶] => &notinvc;
+     [∌] => &notniva;
+     [⋾] => &notnivb;
+     [⋽] => &notnivc;
+     [∦] => &nparallel;
+-    [⫽⃥] => &nparsl
+-    [∂̸] => &npart
++    [⫽⃥] => &nparsl;
++    [∂̸] => &npart;
+     [⨔] => &npolint;
+     [⊀] => &npr;
+     [⇏] => &nrArr;
+     [↛] => &nrarr;
+-    [⤳̸] => &nrarrc
+-    [↝̸] => &nrarrw
++    [⤳̸] => &nrarrc;
++    [↝̸] => &nrarrw;
+     [𝓃] => &nscr;
+     [∤] => &nshortmid;
+     [≄] => &nsime;
+     [⊄] => &nsub;
+-    [⫅̸] => &nsubE
++    [⫅̸] => &nsubE;
+     [⊅] => &nsup;
+-    [⊃⃒] => &nsupset
+-    [⫆̸] => &nsupseteqq
++    [⊃⃒] => &nsupset;
++    [⫆̸] => &nsupseteqq;
+     [ñ] => &ntilde;
+     [≸] => &ntlg;
+     [⋫] => &ntriangleright;
+@@ -1133,18 +1133,18 @@ Array
+     [ ] => &numsp;
+     [⊭] => &nvDash;
+     [⤄] => &nvHarr;
+-    [≍⃒] => &nvap
++    [≍⃒] => &nvap;
+     [⊬] => &nvdash;
+-    [≥⃒] => &nvge
+-    [>⃒] => &nvgt
++    [≥⃒] => &nvge;
++    [>⃒] => &nvgt;
+     [⧞] => &nvinfin;
+     [⤂] => &nvlArr;
+-    [≤⃒] => &nvle
+-    [<⃒] => &nvlt
+-    [⊴⃒] => &nvltrie
++    [≤⃒] => &nvle;
++    [<⃒] => &nvlt;
++    [⊴⃒] => &nvltrie;
+     [⤃] => &nvrArr;
+-    [⊵⃒] => &nvrtrie
+-    [∼⃒] => &nvsim
++    [⊵⃒] => &nvrtrie;
++    [∼⃒] => &nvsim;
+     [⇖] => &nwArr;
+     [⤣] => &nwarhk;
+     [↖] => &nwarrow;
+@@ -1254,7 +1254,7 @@ Array
+     [⇛] => &rAarr;
+     [⤜] => &rAtail;
+     [⥤] => &rHar;
+-    [∽̱] => &race
++    [∽̱] => &race;
+     [ŕ] => &racute;
+     [⦳] => &raemptyv;
+     [⦒] => &rangd;
+@@ -1364,7 +1364,7 @@ Array
+     [⌣] => &smile;
+     [⪪] => &smt;
+     [⪬] => &smte;
+-    [⪬︀] => &smtes
++    [⪬︀] => &smtes;
+     [ь] => &softcy;
+     [/] => &sol;
+     [⧄] => &solb;
+@@ -1372,9 +1372,9 @@ Array
+     [𝕤] => &sopf;
+     [♠] => &spadesuit;
+     [⊓] => &sqcap;
+-    [⊓︀] => &sqcaps
++    [⊓︀] => &sqcaps;
+     [⊔] => &sqcup;
+-    [⊔︀] => &sqcups
++    [⊔︀] => &sqcups;
+     [⊏] => &sqsub;
+     [⊐] => &sqsupset;
+     [▪] => &squarf;
+@@ -1501,7 +1501,7 @@ Array
+     [⫩] => &vBarv;
+     [⦜] => &vangrt;
+     [ϰ] => &varkappa;
+-    [⫌︀] => &varsupsetneqq
++    [⫌︀] => &varsupsetneqq;
+     [⊲] => &vartriangleleft;
+     [в] => &vcy;
+     [⊢] => &vdash;
+@@ -1510,13 +1510,13 @@ Array
+     [⋮] => &vellip;
+     [|] => &vert;
+     [𝔳] => &vfr;
+-    [⊂⃒] => &vnsub
++    [⊂⃒] => &vnsub;
+     [𝕧] => &vopf;
+     [⊳] => &vrtri;
+     [𝓋] => &vscr;
+-    [⫋︀] => &vsubnE
+-    [⊊︀] => &vsubne
+-    [⊋︀] => &vsupne
++    [⫋︀] => &vsubnE;
++    [⊊︀] => &vsubne;
++    [⊋︀] => &vsupne;
+     [⦚] => &vzigzag;
+     [ŵ] => &wcirc;
+     [⩟] => &wedbar;
+diff --git a/ext/standard/tests/strings/get_html_translation_table_basic6.phpt b/ext/standard/tests/strings/get_html_translation_table_basic6.phpt
+index ad1c598..52ba2f4 100644
+--- a/ext/standard/tests/strings/get_html_translation_table_basic6.phpt
++++ b/ext/standard/tests/strings/get_html_translation_table_basic6.phpt
+@@ -81,7 +81,7 @@ Array
+     [^] => &Hat;
+     [_] => &lowbar;
+     [`] => &grave;
+-    [fj] => &fjlig
++    [fj] => &fjlig;
+     [{] => &lbrace;
+     [|] => &vert;
+     [}] => &rcub;

@@ -1,0 +1,71 @@
+commit 294fb83ee84b76479a62e4ed37d5523c1208ad7c
+Author: Nikita Popov <nikita.ppv@gmail.com>
+Date:   Wed Sep 19 09:37:04 2018 +0200
+
+    Fixed bug #76901
+    
+    get_method() may modify the object pointer passed to it if method
+    forwarding is used. In this case we do not want to modify the
+    passed zval, so make sure that we copy the object into a temporary
+    first.
+
+diff --git a/NEWS b/NEWS
+index 0e5daea..1add82d 100644
+--- a/NEWS
++++ b/NEWS
+@@ -2,6 +2,10 @@ PHP                                                                        NEWS
+ |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+ ?? ??? 2018, PHP 7.1.23
+ 
++- Core:
++  . Fixed bug #76901 (method_exists on SPL iterator passthrough method corrupts
++    memory). (Nikita)
++
+ - CURL:
+   . Fixed bug #76480 (Use curl_multi_wait() so that timeouts are respected).
+     (Pierrick)
+diff --git a/Zend/tests/bug76901.phpt b/Zend/tests/bug76901.phpt
+new file mode 100644
+index 0000000..8d567d9
+--- /dev/null
++++ b/Zend/tests/bug76901.phpt
+@@ -0,0 +1,18 @@
++--TEST--
++Bug #76901: method_exists on SPL iterator passthrough method corrupts memory
++--FILE--
++<?php
++
++$it = new ArrayIterator([1, 2, 3]);
++$it = new IteratorIterator($it);
++foreach ($it as $v) {
++    if (method_exists($it, 'offsetGet')) {
++        var_dump($it->offsetGet(0));
++    }
++}
++
++?>
++--EXPECT--
++int(1)
++int(1)
++int(1)
+diff --git a/Zend/zend_builtin_functions.c b/Zend/zend_builtin_functions.c
+index 184b352..f792756 100644
+--- a/Zend/zend_builtin_functions.c
++++ b/Zend/zend_builtin_functions.c
+@@ -1400,13 +1400,9 @@ ZEND_FUNCTION(method_exists)
+ 	if (zend_hash_exists(&ce->function_table, lcname, method_len+1)) {
+ 		efree(lcname);
+ 		RETURN_TRUE;
+-	} else {
+-		union _zend_function *func = NULL;
+-
+-		if (Z_TYPE_P(klass) == IS_OBJECT 
+-		&& Z_OBJ_HT_P(klass)->get_method != NULL
+-		&& (func = Z_OBJ_HT_P(klass)->get_method(&klass, method_name, method_len, NULL TSRMLS_CC)) != NULL
+-		) {
++	} else if (Z_TYPE_P(klass) == IS_OBJECT && Z_OBJ_HT_P(klass)->get_method != NULL) {
++		zend_function *func = Z_OBJ_HT_P(klass)->get_method(&klass, method_name, method_len, NULL TSRMLS_CC);
++		if (func != NULL) {
+ 			if (func->type == ZEND_INTERNAL_FUNCTION 
+ 				&& (func->common.fn_flags & ZEND_ACC_CALL_VIA_HANDLER) != 0
+ 				) {

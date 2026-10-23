@@ -1,0 +1,100 @@
+commit 934691fabba00b2cc36a7a0c93279d41f399c7ba
+Author: Nikita Popov <nikita.ppv@gmail.com>
+Date:   Thu Feb 21 13:42:47 2019 +0100
+
+    Fixed bug #77597
+    
+    The same variable was reused in two nested loops... The test doesn't
+    fail on 7.2, but I'm fixing this here anyway as the code is clearly
+    wrong, and probably erroneous in other situations.
+
+diff --git a/ext/mysqli/tests/bug77597.phpt b/ext/mysqli/tests/bug77597.phpt
+new file mode 100644
+index 0000000000..ef3cb0f952
+--- /dev/null
++++ b/ext/mysqli/tests/bug77597.phpt
+@@ -0,0 +1,27 @@
++--TEST--
++Bug #77597: mysqli_fetch_field hangs scripts
++--SKIPIF--
++<?php
++require_once('skipif.inc');
++require_once('skipifconnectfailure.inc');
++?>
++--FILE--
++<?php
++
++require_once("connect.inc");
++$mysqli = new my_mysqli($host, $user, $passwd, $db, $port, $socket);
++
++$mysqli->query('DROP TABLE IF EXISTS a');
++$mysqli->query('CREATE TABLE a (b int)');
++$mysqli->query('INSERT INTO a VALUES (1),(2),(3),(4),(5),(6),(7),(8),(9)');
++
++$mysqli->real_query("SELECT * FROM a");
++
++$result = $mysqli->store_result(MYSQLI_STORE_RESULT_COPY_DATA);
++
++$field = $result->fetch_field();
++var_dump($field->name);
++
++?>
++--EXPECT--
++string(1) "b"
+diff --git a/ext/mysqlnd/mysqlnd_result.c b/ext/mysqlnd/mysqlnd_result.c
+index 030ee1e020..5e83609947 100644
+--- a/ext/mysqlnd/mysqlnd_result.c
++++ b/ext/mysqlnd/mysqlnd_result.c
+@@ -91,7 +91,7 @@ MYSQLND_METHOD(mysqlnd_result_buffered_c, initialize_result_set_rest)(MYSQLND_RE
+ 																	  MYSQLND_STATS * stats,
+ 																	  zend_bool int_and_float_native)
+ {
+-	unsigned int i;
++	unsigned int row, field;
+ 	enum_func_status ret = PASS;
+ 	const unsigned int field_count = meta->field_count;
+ 	const uint64_t row_count = result->row_count;
+@@ -106,33 +106,33 @@ MYSQLND_METHOD(mysqlnd_result_buffered_c, initialize_result_set_rest)(MYSQLND_RE
+ 			DBG_RETURN(FAIL);
+ 		}
+ 		
+-		for (i = 0; i < result->row_count; i++) {
++		for (row = 0; row < result->row_count; row++) {
+ 			/* (i / 8) & the_bit_for_i*/
+-			if (initialized[i >> 3] & (1 << (i & 7))) {
++			if (initialized[row >> 3] & (1 << (row & 7))) {
+ 				continue;
+ 			}
+ 
+-			rc = result->m.row_decoder(result->row_buffers[i], current_row, field_count, meta->fields, int_and_float_native, stats TSRMLS_CC);
++			rc = result->m.row_decoder(result->row_buffers[row], current_row, field_count, meta->fields, int_and_float_native, stats TSRMLS_CC);
+ 
+ 			if (rc != PASS) {
+ 				ret = FAIL;
+ 				break;
+ 			}
+ 			result->initialized_rows++;
+-			initialized[i >> 3] |= (1 << (i & 7));
+-			for (i = 0; i < field_count; i++) {
++			initialized[row >> 3] |= (1 << (row & 7));
++			for (field = 0; field < field_count; field++) {
+ 				/*
+ 				  NULL fields are 0 length, 0 is not more than 0
+ 				  String of zero size, definitely can't be the next max_length.
+ 				  Thus for NULL and zero-length we are quite efficient.
+ 				*/
+-				if (Z_TYPE_P(current_row[i]) >= IS_STRING) {
+-					unsigned long len = Z_STRLEN_P(current_row[i]);
+-					if (meta->fields[i].max_length < len) {
+-						meta->fields[i].max_length = len;
++				if (Z_TYPE_P(current_row[field]) >= IS_STRING) {
++					unsigned long len = Z_STRLEN_P(current_row[field]);
++					if (meta->fields[field].max_length < len) {
++						meta->fields[field].max_length = len;
+ 					}
+ 				}
+-				zval_ptr_dtor(&current_row[i]);
++				zval_ptr_dtor(&current_row[field]);
+ 			}
+ 		}
+ 		mnd_efree(current_row);
