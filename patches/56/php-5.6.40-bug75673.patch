@@ -1,0 +1,17 @@
+diff --git a/ext/spl/spl_dllist.c b/ext/spl/spl_dllist.c
+index ebe61c3..1e3e911 100644
+--- a/ext/spl/spl_dllist.c
++++ b/ext/spl/spl_dllist.c
+@@ -1200,6 +1200,12 @@ SPL_METHOD(SplDoublyLinkedList, unserialize)
+ 		return;
+ 	}
+ 
++	while (intern->llist->count > 0) {
++		zval* tmp;
++		tmp = (zval *)spl_ptr_llist_pop(intern->llist);
++		zval_ptr_dtor(&tmp);
++	}
++
+ 	s = p = (const unsigned char*)buf;
+ 	PHP_VAR_UNSERIALIZE_INIT(var_hash);
+ 

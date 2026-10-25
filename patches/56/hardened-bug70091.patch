@@ -1,0 +1,109 @@
+commit 6a0b889f57b5f3c6b72253c0919eab10c7496263
+Author: Christoph M. Becker <cmbecker69@gmx.de>
+Date:   Tue Jan 26 16:50:04 2021 +0100
+
+    Fix #70091: Phar does not mark UTF-8 filenames in ZIP archives
+    
+    The default encoding of filenames in a ZIP archive is IBM Code Page
+    437.  Phar, however, only supports UTF-8 filenames.  Therefore we have
+    to mark filenames as being stored in UTF-8 by setting the general
+    purpose bit 11 (the language encoding flag).
+    
+    The effect of not setting this bit for non ASCII filenames can be seen
+    in popular tools like 7-Zip and UnZip, but not when extracting the
+    archives via ext/phar (which is agnostic to the filename encoding), or
+    via ext/zip (which guesses the encoding).  Thus we add a somewhat
+    brittle low-level test case.
+    
+    Closes GH-6630.
+
+diff --git a/ext/phar/tests/bug70091.phpt b/ext/phar/tests/bug70091.phpt
+new file mode 100644
+index 0000000000..893b2eec4e
+--- /dev/null
++++ b/ext/phar/tests/bug70091.phpt
+@@ -0,0 +1,60 @@
++--TEST--
++Bug #70091 (Phar does not mark UTF-8 filenames in ZIP archives)
++--SKIPIF--
++<?php
++if (!extension_loaded('phar')) die('skip phar extension not available');
++if (!extension_loaded('zlib')) die('skip zlib extension not available');
++?>
++--FILE--
++<?php
++$phar = new PharData(__DIR__ . '/bug70091.zip');
++$phar->addFromString('föö', '');
++$phar->addFromString('foo', '');
++unset($phar);
++
++$stream = fopen(__DIR__ . '/bug70091.zip', 'r');
++
++$data = fread($stream, 8);
++var_dump(unpack('H8sig/@6/nflags', $data));
++
++fseek($stream, 53);
++$data = fread($stream, 8);
++var_dump(unpack('H8sig/@6/nflags', $data));
++
++fseek($stream, 104);
++$data = fread($stream, 10);
++var_dump(unpack('H8sig/@8/nflags', $data));
++
++fseek($stream, 173);
++$data = fread($stream, 10);
++var_dump(unpack('H8sig/@8/nflags', $data));
++?>
++--EXPECT--
++array(2) {
++  ["sig"]=>
++  string(8) "504b0304"
++  ["flags"]=>
++  int(8)
++}
++array(2) {
++  ["sig"]=>
++  string(8) "504b0304"
++  ["flags"]=>
++  int(8)
++}
++array(2) {
++  ["sig"]=>
++  string(8) "504b0102"
++  ["flags"]=>
++  int(8)
++}
++array(2) {
++  ["sig"]=>
++  string(8) "504b0102"
++  ["flags"]=>
++  int(8)
++}
++--CLEAN--
++<?php
++@unlink(__DIR__ . '/bug70091.zip');
++?>
+diff --git a/ext/phar/zip.c b/ext/phar/zip.c
+index c52e87647d..b6e50d572a 100644
+--- a/ext/phar/zip.c
++++ b/ext/phar/zip.c
+@@ -829,6 +829,7 @@ static int phar_zip_changed_apply_int(phar_entry_info *entry, void *arg) /* {{{
+ 	zend_off_t offset;
+ 	int not_really_modified = 0;
+ 	p = (struct _phar_zip_pass*) arg;
++	uint16_t general_purpose_flags;
+ 
+ 	if (entry->is_mounted) {
+ 		return ZEND_HASH_APPLY_KEEP;
+@@ -878,6 +879,11 @@ static int phar_zip_changed_apply_int(phar_entry_info *entry, void *arg) /* {{{
+ 	memcpy(central.datestamp, local.datestamp, sizeof(local.datestamp));
+ 	PHAR_SET_16(central.filename_len, entry->filename_len + (entry->is_dir ? 1 : 0));
+ 	PHAR_SET_16(local.filename_len, entry->filename_len + (entry->is_dir ? 1 : 0));
++	// set language encoding flag (all filenames have to be UTF-8 anyway)
++	general_purpose_flags = PHAR_GET_16(central.flags);
++	PHAR_SET_16(central.flags, general_purpose_flags | (1 << 11));
++	general_purpose_flags = PHAR_GET_16(local.flags);
++	PHAR_SET_16(local.flags, general_purpose_flags | (1 << 11));
+ 	PHAR_SET_32(central.offset, php_stream_tell(p->filefp));
+ 
+ 	/* do extra field for perms later */

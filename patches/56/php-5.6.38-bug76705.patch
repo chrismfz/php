@@ -1,0 +1,157 @@
+commit 4c542e6c13ca0d1b3944efee715a4dadb4794c7c
+Author: Jakub Zelenka <bukka@php.net>
+Date:   Sun Aug 19 20:14:26 2018 +0100
+
+    Fix bug #76705 (unusable ssl => peer_fingerprint in stream_context_create())
+
+diff --git a/NEWS b/NEWS
+index cc8db6c..b38b0f6 100644
+--- a/NEWS
++++ b/NEWS
+@@ -25,6 +25,10 @@ PHP                                                                        NEWS
+   . Fixed bug #76747 (Opcache treats path containing "test.pharma.tld" as a phar
+     file). (Laruence)
+ 
++- OpenSSL:
++  . Fixed bug #76705 (unusable ssl => peer_fingerprint in 
++    stream_context_create()). (Jakub Zelenka)
++
+ - phpdbg:
+   . Fixed bug #76595 (phpdbg man page contains outdated information).
+     (Kevin Abel)
+diff --git a/ext/openssl/tests/bug76705.pem b/ext/openssl/tests/bug76705.pem
+new file mode 100644
+index 0000000..295544a
+--- /dev/null
++++ b/ext/openssl/tests/bug76705.pem
+@@ -0,0 +1,50 @@
++-----BEGIN CERTIFICATE-----
++MIIDjjCCAnagAwIBAgIJAJCtQJeo8gdyMA0GCSqGSIb3DQEBCwUAMFwxCzAJBgNV
++BAYTAkdCMRUwEwYDVQQHDAxEZWZhdWx0IENpdHkxHDAaBgNVBAoME0RlZmF1bHQg
++Q29tcGFueSBMdGQxGDAWBgNVBAMMD29wZW5zc2wucGhwLm5ldDAeFw0xODA4MTkx
++ODQxMzdaFw0yODA4MTYxODQxMzdaMFwxCzAJBgNVBAYTAkdCMRUwEwYDVQQHDAxE
++ZWZhdWx0IENpdHkxHDAaBgNVBAoME0RlZmF1bHQgQ29tcGFueSBMdGQxGDAWBgNV
++BAMMD29wZW5zc2wucGhwLm5ldDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoC
++ggEBALqnJTvXG3o47uPpaJI+rjCfwWAvX8lqUPD05jYCEckYOCQZDze0qAzxJRnl
++dJS4V/sEWgqtroJm+AuasEd7GFhuTWG72eo4Gq8kJHt2+ev68yIfxtOvV4gDcN3w
++9Mkk66q661Jg2oMnWK518VpiQQaNRKQtVkjrLf0DG+WRjx1Y6BFpx8mw699lepfk
++IYhblg1JulmIQ99FnE3xkuJ9gsh74BrBD4CxwBAHk3WFB6nnrMW++4rG1gexOCdB
++fikGALEZDjH5iPjNT1c7Los3CVDldHLTDHHUKEM3w/hp5d2lw67eUpoGrxwbnXF5
++nngdFHe2QJNd5jN2TFICJkcIZb8CAwEAAaNTMFEwHQYDVR0OBBYEFAfXyCoG/LwU
++8eoV8bdp1859DnjCMB8GA1UdIwQYMBaAFAfXyCoG/LwU8eoV8bdp1859DnjCMA8G
++A1UdEwEB/wQFMAMBAf8wDQYJKoZIhvcNAQELBQADggEBADLZHI4YYvgmKVmtzvow
++kqhljnR14WVeVgr/zfGbRwgeiyokG+BAb0yaNAWO5QYJH8rrx2+1pTq4alAvkoQm
++2mjJu5d4Dfyb7Cmiz8EeITbfZUmX/JZJIOTrXUx5NiIndB6zJf3Bzq2oqeeENW7E
++zKLmBpiOhywoVdzhGTGOxJo7nlXhzkQleQ+N1NgDjIyFSSkKyuXpdUjhD8Pm+/x9
++0oJIU1pcCVFmavjwFmAEPTD+xNiXZDhndWElEmb6q5yJzbPbxQmCwYpNOknQXKRA
+++ERVRVyaMmO286CONAhSO2cP9P/Ss7NSt28kXNGux1zSeXsRjMx8ICUqtaG99ZhD
++bdo=
++-----END CERTIFICATE-----
++-----BEGIN PRIVATE KEY-----
++MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQC6pyU71xt6OO7j
++6WiSPq4wn8FgL1/JalDw9OY2AhHJGDgkGQ83tKgM8SUZ5XSUuFf7BFoKra6CZvgL
++mrBHexhYbk1hu9nqOBqvJCR7dvnr+vMiH8bTr1eIA3Dd8PTJJOuquutSYNqDJ1iu
++dfFaYkEGjUSkLVZI6y39AxvlkY8dWOgRacfJsOvfZXqX5CGIW5YNSbpZiEPfRZxN
++8ZLifYLIe+AawQ+AscAQB5N1hQep56zFvvuKxtYHsTgnQX4pBgCxGQ4x+Yj4zU9X
++Oy6LNwlQ5XRy0wxx1ChDN8P4aeXdpcOu3lKaBq8cG51xeZ54HRR3tkCTXeYzdkxS
++AiZHCGW/AgMBAAECggEBAKTTTyT9uoz+0649gpOKeGYF3Uzj6NFDakCt8tEEmNIc
++6g6udmq5xKDRHfM1VfKyqzbGTAEcCHutFCOjMUGeKQyGMx04NqIHc0DwSKsikGZb
++z/J1Xy21rDU23KeQzYkGann04DN5xdyFlWFSU5R+KW/wtgnI42Y3EABai3r5RAkj
++4s5GzXhKygdcyDbhv+bcllQi3iAIZExjo6rMN+lmkdP90w/Bjvp4hagCqxEoAh7c
++60PVHfSa5oxd4l9/ni0tddtmkaiwEyxVRDDdduGquOtS3tbThCOzoOeXvbhWCjc2
++QmYAymKAe6G2LxmCUTUz6iPxTQPBAT1q2DFuUpBoOwECgYEA8IFZyooC8lO3WJSX
++sPSOKRryO/TKrtWJY2Mh8gZpVlK8OrLZzpv+odPtIpKMvljlNRd0HTonnVrfB7jy
++6MQN8r6Go+Q9Xy0fYUEoPapdzPvfiYx93KqYIFpg2BrZZFOLN3Ptp7kOhej1KJNe
++DCiN2nk1l+Kp1I22ONYLSwR90D8CgYEAxq2bzaNvzkiIWpKucD9P1DJAVw91QJ3t
++Ll/IF4+d6TPxKq7HKq/3FZSBTL49y7QXScryMR6H92syY0Jnax2erq8iVTc+KBqi
++9j85A9LQi50qo/0AY4Fly3GrDENAohvCBt66OLrINbem5J+tY2pJHOWqzljaXzKx
+++u7F/YaACoECgYEAgcUpz/F7+YlWasNyvhaXBnL1tYg2PPQXd7sru83d1Kg7zGho
++weTGFkelsnvk2WhZ9LW8/3A7o9o+cYpH93SiGhLXz2L+Anb0caOYtP1SM6LMUQmv
++d/vMrdhWXQTPvCSf/8HbwB5ISdUTQ1uQ6XqQYAv68QNqo7f7VNuZqFa6FD0CgYEA
++tV/GLYv3xNUYjb78uoJB6VDaxd/Zxdymq0BLlZ7JpRyDHNkj/4dWxP+mrp26Il3N
++KNO6GDdsHuZgwJbdfL80nvpJGIxvFQOEI9OBxEjPk7UuOTj+AtkdSgYCBhbbSWKX
++1de9H478uXVoSaywCGL+TgAo12nsKR5JtvAGFbWU7IECgYADfyGWKiRpHUmxn/OH
++9vkiISASRrh3YqdDtqij16pYc+VRC9/jUvGRtYAb7x0j6kO9zh3wkZlUXoPIH+zn
++uBmiIY401DNbWe9rM7IeZOg88+WCLmZ6onMew752O7VUm6VotPOuUvYA5pQRZkma
++aDvX/slF+5i+zgN6JKaqqppzQA==
++-----END PRIVATE KEY-----
+diff --git a/ext/openssl/tests/bug76705.phpt b/ext/openssl/tests/bug76705.phpt
+new file mode 100644
+index 0000000..ef10aa4
+--- /dev/null
++++ b/ext/openssl/tests/bug76705.phpt
+@@ -0,0 +1,43 @@
++--TEST--
++Bug #76705: unusable ssl => peer_fingerprint in stream_context_create()
++--SKIPIF--
++<?php
++if (!extension_loaded("openssl")) die("skip openssl not loaded");
++if (!function_exists("proc_open")) die("skip no proc_open");
++?>
++--FILE--
++<?php
++$serverCode = <<<'CODE'
++    $serverUri = "ssl://127.0.0.1:64323";
++    $serverFlags = STREAM_SERVER_BIND | STREAM_SERVER_LISTEN;
++    $serverCtx = stream_context_create(['ssl' => [
++        'local_cert' => __DIR__ . '/bug76705.pem'
++    ]]);
++
++    $server = stream_socket_server($serverUri, $errno, $errstr, $serverFlags, $serverCtx);
++    phpt_notify();
++
++    @stream_socket_accept($server, 1);
++CODE;
++
++$clientCode = <<<'CODE'
++    $serverUri = "ssl://127.0.0.1:64323";
++    $clientFlags = STREAM_CLIENT_CONNECT;
++    $clientCtx = stream_context_create(['ssl' => [
++        'verify_peer'       => true,
++        'peer_name'         => 'openssl.php.net',
++        'allow_self_signed' => true,
++        'peer_fingerprint'  => [
++            'sha256' => '4A524F3617E41BCCA1370ED9E89C9A7A83C28F0F342C490296D362869BDF1DA8',
++        ]
++    ]]);
++
++    phpt_wait();
++    var_dump(stream_socket_client($serverUri, $errno, $errstr, 2, $clientFlags, $clientCtx));
++CODE;
++
++include 'ServerClientTestCase.inc';
++ServerClientTestCase::getInstance()->run($clientCode, $serverCode);
++?>
++--EXPECTF--
++resource(%d) of type (stream)
+diff --git a/ext/openssl/xp_ssl.c b/ext/openssl/xp_ssl.c
+index 5207657..9af01f5 100644
+--- a/ext/openssl/xp_ssl.c
++++ b/ext/openssl/xp_ssl.c
+@@ -471,6 +471,7 @@ static zend_bool matches_common_name(X509 *peer, const char *subject_name) /* {{
+ static int apply_peer_verification_policy(SSL *ssl, X509 *peer, php_stream *stream TSRMLS_DC) /* {{{ */
+ {
+ 	zval **val = NULL;
++	zval **peer_fingerprint;
+ 	char *peer_name = NULL;
+ 	int err,
+ 		must_verify_peer,
+@@ -488,6 +489,7 @@ static int apply_peer_verification_policy(SSL *ssl, X509 *peer, php_stream *stre
+ 		: sslsock->is_client;
+ 
+ 	must_verify_fingerprint = GET_VER_OPT("peer_fingerprint");
++	peer_fingerprint = val;
+ 
+ 	if ((must_verify_peer || must_verify_peer_name || must_verify_fingerprint) && peer == NULL) {
+ 		php_error_docref(NULL, E_WARNING, "Could not get peer certificate");
+@@ -519,8 +521,8 @@ static int apply_peer_verification_policy(SSL *ssl, X509 *peer, php_stream *stre
+ 
+ 	/* If a peer_fingerprint match is required this trumps peer and peer_name verification */
+ 	if (must_verify_fingerprint) {
+-		if (Z_TYPE_PP(val) == IS_STRING || Z_TYPE_PP(val) == IS_ARRAY) {
+-			if (!php_x509_fingerprint_match(peer, *val TSRMLS_CC)) {
++		if (Z_TYPE_PP(peer_fingerprint) == IS_STRING || Z_TYPE_PP(peer_fingerprint) == IS_ARRAY) {
++			if (!php_x509_fingerprint_match(peer, *peer_fingerprint TSRMLS_CC)) {
+ 				php_error_docref(NULL TSRMLS_CC, E_WARNING,
+ 					"peer_fingerprint match failure"
+ 				);

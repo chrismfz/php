@@ -1,0 +1,61 @@
+diff -aruN php-5.6.40.orig/ext/pdo_firebird/firebird_statement.c php-5.6.40/ext/pdo_firebird/firebird_statement.c
+--- php-5.6.40.orig/ext/pdo_firebird/firebird_statement.c	2021-07-15 05:38:27.642549440 -0400
++++ php-5.6.40/ext/pdo_firebird/firebird_statement.c	2021-07-15 06:03:58.066591167 -0400
+@@ -120,8 +120,14 @@
+ 				}
+ 				if (result[0] == isc_info_sql_records) {
+ 					unsigned i = 3, result_size = isc_vax_integer(&result[1], 2);
++					if (result_size > sizeof(result)) {
++						goto error;
++					}
+ 					while (result[i] != isc_info_end && i < result_size) {
+ 						short len = (short) isc_vax_integer(&result[i + 1], 2);
++						if (len != 1 && len != 2 && len != 4) {
++							goto error;
++						}
+ 						if (result[i] != isc_info_req_select_count) {
+ 							affected_rows += isc_vax_integer(&result[i + 3], len);
+ 						}
+@@ -144,7 +150,7 @@
+ 		
+ 		return 1;
+ 	} while (0);
+-
++error:
+ 	RECORD_ERROR(stmt);	
+ 
+ 	return 0;
+diff -aruN php-5.6.40.orig/ext/pdo_firebird/tests/bug_76450.phpt php-5.6.40/ext/pdo_firebird/tests/bug_76450.phpt
+--- php-5.6.40.orig/ext/pdo_firebird/tests/bug_76450.phpt	1969-12-31 19:00:00.000000000 -0500
++++ php-5.6.40/ext/pdo_firebird/tests/bug_76450.phpt	2021-07-15 06:05:12.201046462 -0400
+@@ -0,0 +1,29 @@
++--TEST--
++Bug #76450 (SIGSEGV in firebird_stmt_execute)
++--SKIPIF--
++<?php
++if (!extension_loaded('pdo_firebird')) die("skip pdo_firebird extension not available");
++if (!extension_loaded('sockets')) die("skip sockets extension not available");
++?>
++--FILE--
++<?php
++require_once "payload_server.inc";
++
++$address = run_server(__DIR__ . "/bug_76450.data");
++
++// no need to change the credentials; we're running against a fake server
++$dsn = "firebird:dbname=inet://$address/test";
++$username = 'SYSDBA';
++$password = 'masterkey';
++
++$dbh = new PDO($dsn, $username, $password, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
++$sql = "EXECUTE PROCEDURE test_proc 123";
++$query = $dbh->prepare($sql);
++try {
++    $query->execute();
++} catch (Exception $ex) {
++    echo "{$ex->getMessage()}\n";
++}
++?>
++--EXPECT--
++SQLSTATE[HY000]: General error
+\ No newline at end of file

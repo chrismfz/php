@@ -1,0 +1,71 @@
+commit 5787f91c55a7ebaeb34711d303cfc27f089f58b3
+Author: manuel <manuel@mausz.at>
+Date:   Sat Mar 6 00:59:45 2021 +0100
+
+    Fix #80838: HTTP wrapper waits for HTTP 1 response after HTTP 101
+    
+    Don't wait for further responses after a HTTP 101 (Switching Protocols) response
+    
+    Closes GH-6730.
+
+
+diff --git a/ext/standard/http_fopen_wrapper.c b/ext/standard/http_fopen_wrapper.c
+index 4f702bf75f..4d918b21e6 100644
+--- a/ext/standard/http_fopen_wrapper.c
++++ b/ext/standard/http_fopen_wrapper.c
+@@ -680,7 +680,7 @@ finish:
+ 			/* status codes of 1xx are "informational", and will be followed by a real response
+ 			 * e.g "100 Continue". RFC 7231 states that unexpected 1xx status MUST be parsed,
+ 			 * and MAY be ignored. As such, we need to skip ahead to the "real" status*/
+-			if (response_code >= 100 && response_code < 200) {
++			if (response_code >= 100 && response_code < 200 && response_code != 101) {
+ 				/* consume lines until we find a line starting 'HTTP/1' */
+ 				while (
+ 					!php_stream_eof(stream)
+diff --git a/ext/standard/tests/http/bug80838.phpt b/ext/standard/tests/http/bug80838.phpt
+new file mode 100644
+index 0000000000..2b81e042bb
+--- /dev/null
++++ b/ext/standard/tests/http/bug80838.phpt
+@@ -0,0 +1,41 @@
++--TEST--
++Bug #80838 (HTTP wrapper waits for HTTP 1 response after HTTP 101)
++--INI--
++allow_url_fopen=1
++--SKIPIF--
++<?php require 'server.inc'; http_server_skipif('tcp://127.0.0.1:12342'); ?>
++--FILE--
++<?php
++require 'server.inc';
++
++$responses = [
++  "data://text/plain,HTTP/1.1 101 Switching Protocols\r\nHeader1: Value1\r\nHeader2: Value2\r\n\r\n"
++    . "Hello from another protocol"
++];
++
++$pid = http_server('tcp://127.0.0.1:12342', $responses);
++
++$options = [
++  'http' => [
++    'ignore_errors' => true
++  ],
++];
++
++$ctx = stream_context_create($options);
++
++$fd = fopen('http://127.0.0.1:12342/', 'rb', false, $ctx);
++fclose($fd);
++var_dump($http_response_header);
++
++http_server_kill($pid);
++
++?>
++--EXPECT--
++array(3) {
++  [0]=>
++  string(32) "HTTP/1.1 101 Switching Protocols"
++  [1]=>
++  string(15) "Header1: Value1"
++  [2]=>
++  string(15) "Header2: Value2"
++}

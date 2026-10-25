@@ -1,0 +1,41 @@
+commit dea2989ab8ba87a6180af497b2efaf0527e985c5
+Author: Stanislav Malyshev <stas@php.net>
+Date:   Sun Jul 7 17:01:01 2019 -0700
+
+    Fix bug #78222 (heap-buffer-overflow on exif_scan_thumbnail)
+
+diff --git a/ext/exif/exif.c b/ext/exif/exif.c
+index 605b37923f..cd7975a9f5 100644
+--- a/ext/exif/exif.c
++++ b/ext/exif/exif.c
+@@ -3498,7 +3498,7 @@ static int exif_scan_thumbnail(image_info_type *ImageInfo)
+ 	size_t          length=2, pos=0;
+ 	jpeg_sof_info   sof_info;
+ 
+-	if (!data) {
++	if (!data || ImageInfo->Thumbnail.size < 4) {
+ 		return FALSE; /* nothing to do here */
+ 	}
+ 	if (memcmp(data, "\xFF\xD8\xFF", 3)) {
+diff --git a/ext/exif/tests/bug78222.jpg b/ext/exif/tests/bug78222.jpg
+new file mode 100644
+index 0000000000..a96e16be51
+Binary files /dev/null and b/ext/exif/tests/bug78222.jpg differ
+diff --git a/ext/exif/tests/bug78222.phpt b/ext/exif/tests/bug78222.phpt
+new file mode 100644
+index 0000000000..0e4ead33e4
+--- /dev/null
++++ b/ext/exif/tests/bug78222.phpt
+@@ -0,0 +1,11 @@
++--TEST--
++Bug #78222 (heap-buffer-overflow on exif_scan_thumbnail)
++--SKIPIF--
++<?php if (!extension_loaded('exif')) print 'skip exif extension not available';?>
++--FILE--
++<?php
++exif_read_data(__DIR__."/bug78222.jpg", 'THUMBNAIL', FALSE, TRUE);
++?>
++DONE
++--EXPECTF--
++DONE
+\ No newline at end of file

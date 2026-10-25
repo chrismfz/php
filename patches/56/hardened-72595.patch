@@ -1,0 +1,25 @@
+commit a942cf5b028728cf9e8d1fb4bd72b6b94f6843a3
+Author: Christoph M. Becker <cmbecker69@gmx.de>
+Date:   Wed Jul 14 17:55:15 2021 +0200
+
+    Fix #72595: php_output_handler_append illegal write access
+    
+    We must make sure that `handler->buffer.size + grow_max` does not
+    overflow, so we're using `safe_erealloc()` instead.
+    
+    Closes GH-7241.
+
+
+diff --git a/main/output.c b/main/output.c
+index 7751586dbc..70bc532f30 100644
+--- a/main/output.c
++++ b/main/output.c
+@@ -889,7 +889,7 @@ static inline int php_output_handler_append(php_output_handler *handler, const p
+ 			size_t grow_buf = PHP_OUTPUT_HANDLER_INITBUF_SIZE(buf->used - (handler->buffer.size - handler->buffer.used));
+ 			size_t grow_max = MAX(grow_int, grow_buf);
+ 
+-			handler->buffer.data = erealloc(handler->buffer.data, handler->buffer.size + grow_max);
++			handler->buffer.data = safe_erealloc(handler->buffer.data, 1, handler->buffer.size, grow_max);
+ 			handler->buffer.size += grow_max;
+ 		}
+ 		memcpy(handler->buffer.data + handler->buffer.used, buf->data, buf->used);

@@ -1,0 +1,219 @@
+order	patch_no	decision	category	sha256	filename	reason
+1	7	skip	build/packaging	9d974b64d7a5bbefc200b84bbca1f86986c97904932e53c6cd5ce499f55c5526	php-5.3.0-recode.centos.patch	build/packaging glue, not a source security/bug backport
+2	42	skip	build/packaging	dfaaed60488a6fbff9952da2874ca51fd86bb142919eea2b63688b0e1d5f6cbb	php-5.6.13-systzdata-v12b.patch.centos.patch	build/packaging glue, not a source security/bug backport
+3	43	skip	build/packaging	2e3e62142dcd552d864bbb81ea4a1e2f45b68b3eafadd1d6b06b12446840de65	php-5.4.0-phpize.centos.patch	build/packaging glue, not a source security/bug backport
+4	100	skip	build/packaging	bce41da2b27a7f6abf48e15e49b54379a2e47f2586a8a4ef7a7f3f4815e15ede	php-5.6.x-mail-header.cpanel.patch	build/packaging glue, not a source security/bug backport
+5	101	skip	build/packaging	d994a8a311db8abd64fb40740b5f30397bde4c1a5813af8f3a8c3b085a90c010	php-5.x-disable-zts.patch	build/packaging glue, not a source security/bug backport
+6	102	skip	build/packaging	8dfbe5f75fd44fe62b15a3bc3c7fa7dee20843507b503b71072383eb9297c7a3	php-5.6.x-ea4-ini.patch	build/packaging glue, not a source security/bug backport
+7	201	skip	build/packaging	187c0035c51a320c93171aa14284efaa9ec22023ff0b09824a14451f6d479873	php-5.6-intl-use-icu-namespace.patch	build/packaging glue, not a source security/bug backport
+8	202	skip	build/packaging	553a9198c3519e99d052c715b40fee7c0c302bdbdb7d1e8e5a73f2533ca8291f	php-5.6.40-snmp-disable-des.patch	build/packaging glue, not a source security/bug backport
+9	203	keep	forced	a5e54d710587e14f751eb90d7b1d061e20228a3980162bba1f92034c649ac33f	php-5.6.40-fix-for-openssl-3.0.x.patch	force-kept via patches-local/include
+10	204	skip	build/packaging	b48a7e6e95cbd4e69097b5117c864680171dece08ed7ee1d6b3f25215351513a	php-8.2-fix-for-libxml2.13.patch	build/packaging glue, not a source security/bug backport
+11	210	skip	vendor/sapi	9bda529c370864f63e813aeba752f107058ea41c9ee1b7e5a7a87537f96e3644	litespeed-8.0.1-process_lsapi_phpini.patch	CloudLinux/LiteSpeed/EA4 runtime- or SAPI-specific
+12	211	skip	vendor/sapi	1f01c3b0f1e0c4e6c5eca3c62878abf153dca43a2a869015c265754479633f7d	litespeed-8.0.1-userini_homedir.patch	CloudLinux/LiteSpeed/EA4 runtime- or SAPI-specific
+13	212	skip	vendor/sapi	d8604c92c40acdb680f717cfaa9135b882ffc00088651e6538490a3aa1f7c4a3	litespeed-8.0.1-log.patch	CloudLinux/LiteSpeed/EA4 runtime- or SAPI-specific
+14	213	skip	vendor/sapi	2f4aa28896f2ff99c6de6436fa215e51f2e221e087a5a07561fca1c40c1ba881	litespeed-8.0.1.use_reject.patch	CloudLinux/LiteSpeed/EA4 runtime- or SAPI-specific
+15	215	skip	vendor/sapi	86f98239b73b168f73d630734d37a5aaa1ae44b150eeed5fa7817c5007977aaf	litespeed-8.0.1.avoid_zombies.patch	CloudLinux/LiteSpeed/EA4 runtime- or SAPI-specific
+16	216	skip	vendor/sapi	46b0215acc34a5637d4a478be5fcb2195c2dea794ef0422f03485ef9abcae629	litespeed-8.0.1.dis_keeplistener.patch	CloudLinux/LiteSpeed/EA4 runtime- or SAPI-specific
+17	217	skip	vendor/sapi	420f72c10dc6dde98fed0088c912d34e7df92cfd2daac686249107da56ba9e10	litespeed-8.0.1-graceful_stop.patch	CloudLinux/LiteSpeed/EA4 runtime- or SAPI-specific
+18	218	skip	vendor/sapi	847ad299b7c4375f785f27469a026d1bf49a1183af06784cb5ab4cf442ab320e	litespeed-8.0.1.crash_limit.patch	CloudLinux/LiteSpeed/EA4 runtime- or SAPI-specific
+19	219	skip	vendor/sapi	fc6dbda1d4fdf7236778d5c3b9a6343e6ab810a47090e9688794ba9943aa10e0	litespeed-8.0.1-tsrmls.patch	CloudLinux/LiteSpeed/EA4 runtime- or SAPI-specific
+20	220	skip	vendor/sapi	fa4419e11069a4c7f6fe391939d4288b50ba0994ced0c650b7d9d027d40c447a	litespeed-8.1-cloudlinux.patch	CloudLinux/LiteSpeed/EA4 runtime- or SAPI-specific
+21	221	skip	vendor/sapi	52cdc2e745a420cfa78c83ab482001371e9e8053d323169f65588f452b555136	litespeed-8.0.1.wink_fix.patch	CloudLinux/LiteSpeed/EA4 runtime- or SAPI-specific
+22	222	skip	vendor/sapi	a30f0094074c3605b9b204b2f6236c5c68c6a1511737c1a2b9be7bd8c5a8cfea	litespeed-8.0.1-move_override_ini.patch	CloudLinux/LiteSpeed/EA4 runtime- or SAPI-specific
+23	223	skip	vendor/sapi	18c203d514bb5658088df99273b1a9a74923bdcaee04d3a01c72397407d5b344	litespeed-8.3-document_root_env.patch	CloudLinux/LiteSpeed/EA4 runtime- or SAPI-specific
+24	104	skip	build/packaging	5cd12a93a0477b184d34db9bca1ff2533cfbc7b9ab8e64987a9ea0439cdca869	php-5.6.23-fpm-user-ini-docroot.patch	build/packaging glue, not a source security/bug backport
+25	105	skip	vendor/sapi	656e80250f9cda9293942408e02cf394a88c002cfc9e3752d9c31f1ecf96506b	php-5.6.x-fpm-jailshell.patch	CloudLinux/LiteSpeed/EA4 runtime- or SAPI-specific
+26	106	skip	build/packaging	9dedfe0a9ce2068201c20452aea5dddfec2ea1346c5f075201e7f7a9120050c6	php-5.6.32-ftp-init-openssl.patch	build/packaging glue, not a source security/bug backport
+27	107	skip	build/packaging	9384d494096b926c2dbd8ea6969bd25aeeb89822a27cd2e3a02e989e8a7e2889	php-fpm.epoll.patch	build/packaging glue, not a source security/bug backport
+28	108	skip	build/packaging	69f5cd0e2271b03c9829021ab04469ae1ddfed6a6dd1fc77689faaf516ef1595	0001-Update-libxml-include-file-references.patch	build/packaging glue, not a source security/bug backport
+29	1000	skip	vendor/sapi	169bceb9c4b96dbfc4ad59c0e9be04d485b0c11e18e9cdb961edf47e931ef57a	cloudlinux-php-fpm.5.6.dl.ea-php.v4.patch	CloudLinux/LiteSpeed/EA4 runtime- or SAPI-specific
+30	1001	keep	bug	3a084ed344273bc3da3d2e5842a109a5dea9213e50f9d2d8808ad8a04aa7938c	php-5.6.38-bug52974.patch	
+31	1002	keep	bug	a976489dd214d6e6c4889c1ec6f886e26fc5d338b6c423ed5ac7ef0f44d7840f	php-5.6.38-bug55146.patch	
+32	1003	keep	bug	dcc10d8098391f8b58301b6d7765b703b2c3feb0bbc121b3bbf4c1e4a44ade63	php-5.6.38-bug60494.patch	
+33	1004	keep	bug	550a30c426c5164c726d9307a92b6711c38441da64a4e11b5f108a6b6ad4ee7f	php-5.6.38-bug63839.patch	
+34	1005	keep	bug	d58abde262a1697d7d0b2debd116baa155c2f932e88912c39c5ebe240976cf20	php-5.6.38-bug65988.patch	
+35	1006	keep	bug	1f50def891ebfb51a7b48026b26c94f2dfce0b7dfdb6516ace8804e9755efbdd	php-5.6.38-bug66828.patch	
+36	1007	keep	bug	d40f0c6760e2a9068857be454a9c453bf5023877a0fc660257eb9275beeeefd3	php-5.6.38-bug68175.patch	
+37	1008	keep	bug	de1b859ec6cb36c3db5372652c6f6b3a693bd94315d375bb7bf2582e7e006327	php-5.6.38-bug68180.patch	
+38	1009	keep	bug	016270f67999d7f6925c3077f4f72ecf7eeabf422311545c0469fbbea53b64c6	php-5.6.38-bug68825.patch	
+39	1010	keep	bug	7e6970ddd29eb8f27a686dcace091ebdb02fa4f39e9f2012fff0faebe0490f3c	php-5.6.38-bug72443.patch	
+40	1011	keep	bug	8cbf6d7dd27db95eb56ff4132418953ab163385676b1d7c2b9ee3e8aa74c8de4	php-5.6.38-bug73457.patch	
+41	1012	keep	bug	962e84c373b9cd7a2a8926989401f91b7808c339f646623144448285a898e6f8	php-5.6.38-bug73817.patch	
+42	1013	keep	bug	a26b22b0b27061fd4a0755d6e51c884b5ef4df67c451fcf9e30e34abf9713c09	php-5.6.38-bug74454.patch	
+43	1014	keep	bug	62f479c464b489f01bb1a3a1f916c2efca4e0caf7b512d76120ada1289b20fdb	php-5.6.38-bug74484.patch	
+44	1015	keep	bug	c3e194b453266d4d494edf511f70c2457d949d9e7516aff051c2016987a65611	php-5.6.38-bug74670.patch	
+45	1016	keep	bug	83331b98797fac041d76c10e3c71fd60ae4abef99011970a03c16a0eb17d1837	php-5.6.38-bug74764.patch	
+46	1017	keep	bug	70267f5a3fe51e7d1dc8a8a3782dc78a29b6e4321dd100462474a372fe4b21d7	php-5.6.38-bug75231.patch	
+47	1018	keep	bug	e9960de3ad88b9e77daf62c6f481e3bb89a89b50bc08321adec2ac77646f9aae	php-5.6.38-bug75273.patch	
+48	1019	keep	bug	6cfb620b720c2dde938af7f3c360c19419b78a5a6f62a77a951b4090221aca2e	php-5.6.38-bug75402.patch	
+49	1020	keep	bug	bc457e6796ce97dee099452ce8b324adbcd1c0916fd01ac8cb8ad9045971f6c1	php-5.6.38-bug75696.patch	
+50	1021	keep	bug	37b9dfd19fd5a7e32db3ec4c6fede39a280502126b9349b4cbf88579b2987d2a	php-5.6.38-bug76480.patch	
+51	1022	keep	bug	bf7c409401764c91d548b054b4abce773f833367c4406ef000d5044e608c16e2	php-5.6.38-bug76488.patch	
+52	1023	keep	bug	c6bda3202facf14a1c005c31f493ba06ed19f6c77815e478b9e81294413d79bb	php-5.6.38-bug76505.patch	
+53	1024	keep	bug	bb8d2825c3f89ce6bde697cc57776d480a296caefc18c4ab08b0c31186a237f8	php-5.6.38-bug76517.patch	
+54	1025	keep	bug	2c8992512c4afaa262785912ea9e61753f7f578321f8aaf552b0a5211c40e250	php-5.6.38-bug76524.patch	
+55	1026	keep	bug	e791ce872d94de51c3296a81dbfd049e3bb0f65c6a4c09612b28453474141d86	php-5.6.38-bug76532.patch	
+56	1027	keep	bug	7aa107cff88c6dd711090ce03fc2ccc8dc74522493a355896e62dfd580fcacee	php-5.6.38-bug76534.patch	
+57	1028	keep	bug	31953a524ccfb9d6c11590524533fde00529592d2a207b94591ea1388231f222	php-5.6.38-bug76536.patch	
+58	1029	keep	bug	a8888647cf31abe16bcd27fe16f475f9825a545df27c3460916205e69ebffc14	php-5.6.38-bug76548.patch	
+59	1030	keep	bug	04d91240b3ca8dcbe324b6f7350a47ceced1565b962daab7d8dc924b5068d3ad	php-5.6.38-bug76665.patch	
+60	1031	keep	bug	040d7a7d818da2ac52d5db6e9ad8cef918e55a7542c73febbcf5d3c7359a67b4	php-5.6.38-bug76704.patch	
+61	1032	keep	bug	071c67e2d3faaeb51324f3c80c052d220d3c09f9b0d81f5e7c560ff7dbcd87f5	php-5.6.38-bug76705.patch	
+62	1033	keep	bug	9443340f0a3c341f8dcadf58c92ada8ed6332f4f99a9f14d2ed3605724635d13	php-5.6.38-bug76709.patch	
+63	1034	keep	bug	725f928c0b9a0c3d49c6f12d99c5f417995729f5d32f7ba1369a16884cba7f28	php-5.6.38-bug76754.patch	
+64	1035	keep	bug	d54a0b704bd9421c061142560dbf18190b883a02d49741626c8a83ca4f0ce74e	php-5.6.38-bug76800.patch	
+65	1036	keep	bug	708a9ecbd915394f85f59ce6e17a4bd3a2da56d3f345c003dfca9e9b04c7b62c	php-5.6.38-bug76832.patch	
+66	1037	keep	bug	939f2657419c6310bfefeb12e9c7ecdb6249b842475a7d25e81ad449c6a1e1d9	php-5.6.38-bug76886.patch	
+67	1038	keep	bug	fdbab839bd384d647a363eabe78576fd45ca9c283a190a45ae28654cba661803	php-5.6.38-bug76901.patch	
+68	1039	skip	build/packaging	acf8117c0f69860f67550d70f0166928e250fb46ca185d00b39f1b396385a60e	php-5.6.38-bug_arginfo_bzcompress.patch	build/packaging glue, not a source security/bug backport
+69	1100	skip	vendor/sapi	86524f99f52c5f0c30e75060038b69f4e266c955c1ea928fed5e01be5d3cd442	php-5.6.40-wordpress-update-url.patch	CloudLinux/LiteSpeed/EA4 runtime- or SAPI-specific
+70	1101	keep	bug	e7e9e5507f91c9f6655f7c6b4736945fbb69caa1d34602d4a1cf073811a762b1	php-5.6.40-bug77630.patch	
+71	1102	keep	bug	0529024ba1de10f1c5296d11c85f1198c0f61ebf6d68b387b2dcec8b4c426b4d	php-5.6.40-bug77494.patch	
+72	1103	keep	bug	20e0fb73dd19e92823bc9af58c32542e64ceff3fd68bcf799e3a7b0ee9eac17a	php-5.6.40-bug77431.patch	
+73	1104	keep	bug	487825e55853ce160be1bb7857c52571efca7d3e9b3ce2947ce028ce44d6b6c4	php-5.6.40-bug51068.patch	
+74	1105	keep	bug	362a5043ba13c4622e932d16d8444703eb45ebc2e0fff29974dd19721130af90	php-5.6.40-bug77396.patch	
+75	1106	keep	bug	0e3e3a012ea3633024d1fb886fd7a13a5c35b7206debc6df093129f2c24f2998	php-5.6.40-bug77540.patch	
+76	1107	keep	bug	e516529107e247d2b63728284e3f2ff2268ec333175468f28f3111a504b8f266	php-5.6.40-bug77390.patch	
+77	1108	keep	bug	e68e7ebf453f42da6f7847fa3a207d32cdbee4f64e431e46d55b205b92e2757c	php-5.6.40-bug77586.patch	
+78	1109	keep	bug	46aece72ad2ddd000fedc4280d4ac9d1f86f39afe6dec5827136e748dbbb44d7	php-5.6.40-bug77546.patch	
+79	1110	keep	bug	164a0b6b0c8b6040861a93df09be0376d0bd5a2755856b2404c08afae60645ff	php-5.6.40-bug77563.patch	
+80	1112	keep	bug	000f7c5c6d0c96a6b387999f6254579f8f350eda04a299cf1f6101d8566ca6e6	php-5.6.40-bug77024.patch	
+81	1113	keep	bug	3374db78d8850482a245c9a3462e5e9aebdbd180cfd2ceb862e3fbdfafd3aaf2	php-5.6.40-bug77945.patch	
+82	1114	keep	bug	68b9c2fd2696591d0c8495d3cc4fbebb3fcd7acdc7af91d98a544e87527e1d33	php-5.6.40-bug77677.patch	
+83	1115	keep	bug	03851aab52988f2788cdee71b3357ffb4d2737833dfd86bd43e5c487c0d6c3f7	php-5.6.40-bug77697.patch	
+84	1116	keep	bug	c5b327142c6846d556a0a057bb5f2790dfa2af7ed0a7e65ac100ea9ce85ff133	php-5.6.40-bug77943.patch	
+85	1117	keep	bug	28fc1eb16346ac04d5ad768fdd98061e38355177b59dbee2851419ff950a81a3	php-5.6.40-bug77944.patch	
+86	1118	keep	bug	ac31a0de9a06f4f7dfb85acccb5884851f6ca663f69d514e9129d5a6bf99d127	php-5.6.40-bug76717.patch	
+87	1119	keep	bug	7a38f1fecf992b11caeeb79c5e58cb78bbaf43d95e94c6cfa7a5f5f239efaa6a	php-5.6.40-bug77921.patch	
+88	1120	keep	bug	280a662cfc7d3da8d2a91a68016fdb76db70e3f02e0cd3719594fc9860c84784	php-5.6.40-bug77597.patch	
+89	1121	keep	bug	22b16414aa5634c5d612f95ef3e894a59dc09a77c16886d9493a9f3cb1277ec4	php-5.6.40-bug77934.patch	
+90	1122	keep	bug	05bcd020210207ed5aa6fba250b1f6a33974123f4f710ebcfb15c5084debfc31	php-5.6.40-bug77700.patch	
+91	1123	keep	bug	36dc07b7a85aacf931dbd9a4aa877de9624b4775d338a696a92268c8ac3ea18b	php-5.6.40-bug77765.patch	
+92	1124	keep	bug	cf78d3913284df250a434c5007c4f992d39454ad93bb4f1302588ad21dbd65d9	php-5.6.40-bug77767.patch	
+93	1125	keep	bug	9e42a71bb37bcf7ec44649f55dd11531b173bdebcf1d933540af7b16f8aa1961	php-5.6.40-bug77722.patch	
+94	1126	keep	bug	34dbf9262f51dab2547175d949878fde29872f2dfef7cfe6273ba4c40c3f2901	php-5.6.40-bug77664.patch	
+95	1127	keep	bug	76d00e7554bcdf44ee1465bafe5325037093a2e6b9f9502bf5b31af0e35b3abe	php-5.6.40-bug50020.patch	
+96	1128	keep	bug	0802a2c9585c909ebdebfe10b532ac44687a9988ff77f5f394ae3038f3f5ff15	php-5.6.40-bug77742.patch	
+97	1129	keep	bug	612d0be55e8658998be6c21fc637003b82efcf43b39353922b37938cad07bc86	php-5.6.40-bug78069.patch	
+98	1130	keep	bug	eb0794bdbf71eab3405e9f28d8f73702c023bfb0aceb4e6c4ad79b2e7d71855d	php-5.6.40-bug77967.patch	
+99	1131	keep	bug	68a3a0046093043e3a4fb9565cdc1a0a50efd71f2ffa453f350fcca55441d48a	php-5.6.40-bug77973.patch	
+100	1132	keep	bug	2f9e0fbcabac409b567414b8af5440cb8a885efc93cf146b366dd21b8fb4501e	php-5.6.40-bug77988.patch	
+101	1134	keep	bug	d98a9fa9427b29660c8fb92cf35b45f66767023cef88ca56733f17994466a671	php-5.6.40-bug78192.patch	
+102	1135	keep	bug	73dbb22b0f69c3b7493e59f82f7f39cba83571a79c1498e6653630fa677c25a4	php-5.6.40-bug78212.patch	
+103	1136	keep	bug	da9ae946e4438cadc40a920c261798eb880e34e74932605a1a406bf59b32ec85	php-5.6.40-bug78297.patch	
+104	1137	keep	bug	079e949ffbae52f2ca3b91bec7ee4fcc28f233e8aa8950ceafed8f976f57ed06	php-5.6.40-bug77124.patch	
+105	1138	keep	bug	0f1b0f13c2bcfe05966247054c752b282e80ac5fafdbd2ef262107a28aa7379e	php-5.6.40-bug78256.patch	
+106	1139	keep	bug	83d1d0d019848be38672867d0677ba1ef80d15feabe6516b09e47aa76f756383	php-5.6.40-bug78222.patch	
+107	1140	keep	bug	6d2a5be616da433b29d6dcdd6e50e0f199aa5b24055fb900da11f4fe3f3aacd0	php-5.6.40-bug78279.patch	
+108	1141	keep	bug	92f5c8cee8efc01622e54b1c0cf10496f206a594d92b6210741a38498126f6f1	php-5.6.40-bug77946.patch	
+109	1142	keep	bug	56a4b9397dccf9c86b6b7ac965f6a86c0cfc747137c1d226ab6c6595606e585f	php-5.6.40-bug78333.patch	
+110	1144	keep	bug	ee8db4f8984ab51dd1a932d4c2ff8ea49be9d30db0fdefdf06143e7df0582ad7	php-5.6.40-bug69100.patch	
+111	1145	keep	bug	14242c49d904cb7f68c99271e96c9c0319617c8613c52c078cda1b01849eb5a6	php-5.6.40-bug78342.patch	
+112	1146	keep	bug	1bf96774baa6e44684148a6521e4a471f212dd806870dd38420ba243ba93c62b	php-5.6.40-bug75457.patch	
+113	1147	keep	CVE	07ba31090d3c48167e6454567d209dd3b1e6b0b0469b33675dc7e78642200891	php-5.2.17-CVE-2019-13224.patch	
+114	1148	keep	bug	eeb4908663b4a30ff6c3dde5835ff3b608a660f7bc2a9cf5b0e2e0df98c0fe13	php-5.6.40-bug76342.patch	
+115	1149	keep	bug	6af6fc18da95c0091ab1e634dc77ff6b0d45c72e25ac56bb1fae19a5783d99fc	php-5.6.40-bug76859.patch	
+116	1150	keep	bug	820454e7b4d9b7ad6fe872ba08d1b15b3fa0c11f92a654975849d29f71e1a928	php-5.6.40-bug78599.patch	
+117	1151	keep	bug	7cf6c47b10949ca1681a2137c0a8200cf6a0f832b1a56a36a07652813be0872e	php-5.6.40-bug78579.patch	
+118	1152	keep	bug	a2c2858eae1a1b27be880d11edd50e97ac3569840628722042f280fdf69c79c7	php-5.6.40-bug78413.patch	
+119	1153	keep	bug	004ce70dac93bc1d94f92b500f6dd5252c3e5acbda9a38b1934c1686cd16c9f4	bug78910.patch	
+120	1154	keep	bug	f35e33002496d776efda6eacae728f04a52faab6a51bf45a675d2d51e8187c95	bug78878.patch	
+121	1155	keep	bug	8d882ed03b0fe9aaa4a087409f5b26ad8af7fed0e8b913085c13c1a1c6dbc0dd	bug78793.patch	
+122	1156	keep	bug	d137d300dc747c7723433cc24d4d93057e4cb0ba14b1e049ef3a8898c2a1f019	bug78863.patch	
+123	1157	keep	bug	03cdf437e35eaf63d604cc9fa82217ae0c1f49c12626968fab93660cce95f857	php-5.6.40-bug79037.patch	
+124	1158	keep	bug	cce7dddfd0c3991a3deeadb18930c5a25cbe9b0e75e3f86b8acf37415b2765ff	php-5.6.40-bug79082.patch	
+125	1159	keep	bug	8011408a4fab32f99b01b3b26d137b13e14ec8e260c0d74b192487092d9a805b	php-5.6.40-bug79099.patch	
+126	1160	keep	bug	cf35f2b7e38434faa8285b072d3924807da8d0510b8000c0599c916f9d269353	php-5.6.40-bug79221.patch	
+127	1099	keep	forced	f8767b6ab0640edda980622ebbfe9e42877b9d366b27b578fd7989fd3cefba90	php-5.6.40-openssl11.patch	force-kept via patches-local/include
+128	1161	keep	bug	369cfdb6d1dc322e7f7ea51a5be116bcdf71e6e0ad648165c6b17bca87d675e9	php-5.6.40-bug79078.patch	
+129	1162	keep	bug	8953e08cf297b60082701ffec80216b14ab3ea6b7b72bc8be39b7f38719ba13b	php-5.6.40-bug79282.patch	
+130	1163	keep	bug	bb91e059f1482100cee12c8ee3f04554341980103db5abe7997b525da44b8a48	php-5.6.40-bug79329.patch	
+131	1164	keep	bug	2647550be0d71929e7de6c5ff784daa5f1d69e4ed77d442efb3d4752de7517cc	php-5.6.40-bug61597.patch	
+132	1165	keep	bug	fc666169bf270200793398092b21ae76274eb18967ee6f30b9475c58b945cfb9	php-5.6.40-bug74940.patch	
+133	1166	keep	bug	d0fd99f9089fae8ab0eb03e18d2bcd712fcee29dd02a01f64c94392b0072adf6	php-5.6.40-bug75673.patch	
+134	1168	keep	bug	c39070ef60f4732256fb52b759d5205b6835aaa7f5daa50fb9d6de5f1d7b16b3	php-5.6.40-bug79296.patch	
+135	1169	keep	bug	71a06a097e31af2488e6ec031dff99a3c996da22cba750d9d037682775a362dd	php-5.6.40-bug79330.patch	
+136	1170	keep	bug	95d301637b3b329361d170364155ef36355bee3abc10a5e73fa9642444b963e6	php-5.6.40-bug79364.patch	
+137	1171	keep	bug	80a6ead4bffcf6a9dde55ee73c6412410c16fbc95ffa4ad124522df7ec2925a5	php-5.6.40-bug79396.patch	
+138	1172	keep	bug	12313971af0ace4f459091b1814fd17528d8f784a1ae61ad8022436c220b9f82	php-5.6.40-bug79410.patch	
+139	1173	keep	bug	af114607b6b93e0bc94a99337e4d0465e2c13cc1c5ea98219295029b49d2ab2e	php-5.6.40-bug79424.patch	
+140	1174	keep	CVE	40fe1b4b91719489c52e99108fe19973cfecbe8d312c74e98ca104e15543cde1	php-5.6.40-bug79465-CVE-2020-7067.patch	
+141	1175	keep	bug	1dfd5a7150caa4319d0814375b90275ff24ed1bdf1da600c5a067f81256843a6	php-5.6.40-bug78221.patch	
+142	1176	keep	CVE	083791ea775d174cfb176d59d8b772aaf612527126a1734dd3997f1e3a9da026	php-5.6.40-bug78875-CVE-2019-11048.patch	
+143	1177	keep	CVE	e4cc29231f94b9e3e4f24f10d5df3886ab31ed1c30f476e6a7379938beb3a6d9	php-5.6.40-bug78876-CVE-2019-11048.patch	
+144	1178	keep	bug	2e1dc49891085623fb9edf1c3798050c4c76c9a5bc8f9da7b33e9907d95e443a	php-5.6.40-bug79497.patch	
+145	1179	keep	bug	b0ac22b1604662c9a96afe839ac66e598f1b26c19bc8a4e8746bc9c0434f2ba7	php-5.6.40-bug79514.patch	
+146	1180	keep	bug	a1991b878fdf537a84bb8d8031a4fd012419759ce921ced1b135c833acef1476	php-5.6.40-bug79528.patch	
+147	1181	keep	bug	d749faed7f3ad17297299ac18f6018273d20dbfc3934a07f4ca76737dfca8b4c	php-5.6.40-bug62890.patch	
+148	1182	keep	bug	f50e8f92303099ee3274e04d7eceb3e933fc35bc32cc307019d005271b9ff78d	php-5.6.40-bug70362.patch	
+149	1183	keep	bug	1cc4a6b7d210be5b2e5c140aa5cc0a82ebccbcf50f2a5b19add0a9b14f90c5d0	php-5.6.40-bug73527.patch	
+150	1184	keep	bug	499f8c7f9f17675f4a2c1b70e92a2df141265f54fc1ee4ee4ebfd78480a2667b	php-5.6.40-bug74267.patch	
+151	1185	keep	bug	3a4fe5ce8746992e0069041ef4e15cf19035f6f82d6fbe1e279bd47baa1de189	php-5.6.40-bug79787.patch	
+152	1186	keep	bug	601b4e87b30aeae7f2903fa2e31685eed6cb6fe8b3c38de317b189c80d5e2094	php-5.6.40-bug79877.patch	
+153	1187	keep	CVE	bd811606fa14f9f6d1946d51616806ac160ad695c5ef05eb3bf54596c9fdf0b4	php-5.6.40-bug79699-CVE-2020-7070.patch	
+154	1188	keep	bug	5988071b187cde1f7e189d91c4b490f9306e1a4198b380d14196b371799fe40e	php-5.6.40-bug80007.patch	
+155	1189	keep	hardened	3bbf9e80731dc5918e6ce171672096a55666e3519a36ff7b3bb387fb885f3955	hardened-php-5.6.40-bug73809.patch	
+156	1190	keep	hardened	3aafb480a2da2f453fc4586fc613e54b648e6a67676b5d275cb431ecf69dd1ec	hardened-php-5.6.40-bug77322.patch	
+157	1191	keep	hardened	626e3896265c22890b0ab38302658d5a65d30a659538d26e132365ca9c67989f	hardened-php-5.6.40-bug77961.patch	
+158	1192	keep	hardened	f3b8c4d9aa293ec5b8152f5aa3c8a197f0e051f5d650cf91642d365ab4fcea81	hardened-php-5.6.40-bug80366.patch	
+159	1193	keep	hardened	cc019868e5ae0a297e8d46530f1be806781aa1f8c02b28d4707c7e56914714fc	hardened-bug70091.patch	
+160	1194	keep	hardened	34ba534795e76202bf2b6e93bd886242ecc54ffaade88cbcdc07fb1cd41be557	hardened-bug80719.patch	
+161	1195	keep	hardened	5fccf047e042e9e54a67d393958345ac5044b6c53bbd41c5cc6efccb5484ec41	hardened-bug80838.patch	
+162	1196	keep	hardened	68441f48811b9166acf0a9bcbfb95c6996be429f711f380b1648e63312fc68e4	hardened-bug75850.patch	
+163	1197	keep	hardened	6bab60fd006056ee52c3a0ae7fd8bb10ae049df3d36c29e3f80baa8349cf147d	hardened-bug73533.patch	
+164	1198	keep	hardened	b974b00edb1a208fd8324130ba145fa4b4a55d30b89f6f5642cdf66961a6399f	hardened-bug66783.patch	
+165	1199	keep	hardened	d8ff4af379c5be754eb040ee4a61b2d0b18227d160361abc0c91abba13eee934	hardened-bug76448.patch	
+166	1201	keep	hardened	ed1b3cb66fdcbc2c0080da836707f3823134d6fc3453b88ec903e5c9c8d5166a	hardened-bug76450.patch	
+167	1202	keep	hardened	ec8695e3ea7eb4642e7d34330046fbb81a7ebf9ed79f755aadb09564b23d0e16	hardened-72595.patch	
+168	1203	keep	hardened	5f33a9f051383b90eb88a66f1668f8174fd2ff589a250264c85cfa86416fc931	hardened-81211.patch	
+169	1204	keep	hardened	ef27945d57b80cfda208fe4711e9670a3b7a11e0ee7ac0603d0268f4310422db	hardened-81305.patch	
+170	1205	keep	CVE	9285293348e284813a307714352ba90c3f471f0f78ee1f30c352584ad5295f9a	alt-php52-cve-2021-21707.patch	
+171	1206	keep	CVE	b0bb2b045c0e34c81a740ec756e2528e18c4793e87a025c8a6acbe2598f14709	CVE-2021-21703.patch	
+172	1207	keep	CVE	429d3b2342f3e4cb026280575067074c12a8b1711c882e51c0929cd8b55427a9	php-7.0-CVE-2022-31626.patch	
+173	1208	keep	CVE	bd2e6a132bdc54597674d2e160eb9de7f95b86b538681c59583c0fc2eda5af02	php-5.6-CVE-2022-31625.patch	
+174	1209	keep	CVE	222459089738b6cb0683c1c85041ed9a561e9c8d30848b49d3d266459ccde0a4	php-7.0-CVE-2021-21705.patch	
+175	1210	keep	CVE	5f54ac5334cd54480ac9d454052e445b1511e40e9c551defdb54d5fe8efd7cf8	php-7-CVE-2022-31628.patch	
+176	1211	keep	CVE	1f35f9c249b958eab510f1e93912649fa360f6b6f552b1dc89042208b033dd6d	php-5.6-CVE-2022-31629.patch	
+177	1212	keep	CVE	cd0cedb0b9033627674acad6c8f105fb6fa1bfd88d2ad2fec2f78c26282deaa6	php-upstream-CVE-2022-31631.patch	
+178	1213	keep	CVE	cba206ddb91d8e9e23fc1642aee77c03d0298495d19a7fa60ec5652a07576024	upstream-CVE-2023-0568.patch	
+179	1214	keep	CVE	804bf8d6be0c1b7e3b58bc3221035618521cb93afe1b72fb7bab30790a8b6d2d	php-5.3-CVE-2023-0567.patch	
+180	1215	keep	CVE	11a4c5e75a014d942b676344a2c28492d4d5e1d72e59ae44345b88234b9aa71a	alt-php56-CVE-2023-0662.patch	
+181	1216	keep	bug	51d768ece4f5f13012812e6e32725d838c4e34f0874195263441d4f55a29e5e7	php-7.1.4-bug74461.patch	
+182	1217	keep	CVE	d3d3db7627346e695e4aafe08857459dd3441d30f7b0a1a4e22de68610c58741	php-5.6-CVE-2023-3823.patch	
+183	1218	keep	CVE	29b20cf02a1aecdc353eabfd5b17c42a5f016c0adf37dfaea88dfeb868b2364f	php-5.6-CVE-2023-3824.patch	
+184	1219	keep	CVE	77379fdcc315f431a5c540eee849e1d5252cc5b5dcb712cbe5b9c29ba0e58e80	php-5.2-CVE-2023-3247.patch	
+185	1220	keep	CVE	fa0eee112d8644215cf8738778caeb638b8f3e11f9cfeb01021442d539635a9d	php-5.5-CVE-2024-2756.patch	
+186	1221	keep	CVE	a7aad76dbd45d79bc27a0d26b01779ef51f7354b400c49a3896544773735e0a8	php-5.6-CVE-2024-3096.patch	
+187	1222	keep	CVE	ea097c8af63806a2798c6f01ea0cf4904b9f9b1d46ceb18d0ffe05d9f9f9b9b3	php-7.3-CVE-2024-8925.patch	
+188	1223	keep	CVE	699324f2f8d70b81a933be46f26f8a9582adf5ace75a4c33d0872103c4af8da4	php-8.1-CVE-2024-8927.patch	
+189	1224	keep	CVE	53dc972b15e3adbbd48114f454253e028238a22d1687b6afbcfa2a6aa7fc3f5c	php-5.3-CVE-2024-11233.patch	
+190	1225	keep	CVE	afd1c989464e2fec591fcee4ec2e5dba402423a68d9abc508e9cd4767814563b	php-5.4-CVE-2024-11234.patch	
+191	1226	keep	CVE	2ab2c575e62914a9a8c9d037abb482fb769b7698f3287eac21d7f750f00d1461	php-5.3-CVE-2024-11236.patch	
+192	1227	keep	CVE	eeba352b18357b1bce8516accc51eb7fd9f8d9696475afa8c938e0f78cd90f91	php-5.6-CVE-2024-8929.patch	
+193	1228	keep	CVE	7a79e0d5060ee9e07cc498c3b34ab9f95fbcfda6854f48c3c121df538113d2fe	php-5.6-CVE-2020-7071.patch	
+194	1229	keep	CVE	f6ebbb4e482a27680c0c6252fac14f13dd10175c71a082639e73c5c7d9f42667	php-5.6-bug79797-CVE-2020-7068.patch	
+195	1230	keep	CVE	d212dfe4a791993e2f9afadba23334e04d17cd14d6a925a5d4655dacd935b1f9	php-5.6-CVE-2025-1217-CVE-2025-1734-CVE-2025-1861.patch	
+196	1231	keep	CVE	827f30274ecd5042f4f1ada2067b90ff7baa28b65171d6f1b3ddab1e203d317b	php56-CVE-2019-9022.patch	
+197	1232	keep	CVE	8096305ebab29828d30f3e0328984344616ef83d9e43ea845265556ec697008b	CVE-2019-11034.patch	
+198	1233	keep	CVE	54bb6435720b0facba4e31ad911f17f2f0c37a550e735b9ea33dd43cce83cc34	CVE-2019-11036.patch	
+199	1234	keep	CVE	902306f79a9836d260e437eebe777786d5d4dbc9b135d924fbf7030dd3fd98df	php56-CVE-2019-9025.patch	
+200	1235	keep	CVE	d592faeb5a4aaf19bd58eea91c6f6608c1d7d0a4eba63330312159664f6b3a76	php54-CVE-2025-1220.patch	
+201	1236	keep	CVE	1970c2361b405aa3e897f6d931e530e709e377d58989acff919c60cf86b58fd3	php-5.6-CVE-2025-6491.patch	
+202	1237	keep	CVE	62b984951ec275c53537dfa63a7dfccc9c4c94fc0aa26e84bf9ab4678f169781	php56-CVE-2019-11035.patch	
+203	1238	keep	CVE	6cbe371fd18062bc7157c172401586a1e29d805b5897f4387b83ea8475f78dae	php-7.1-CVE-2019-19246.patch	
+204	1239	keep	CVE	a397683fc21e8c4da641915dfa39bfabb261358692aac85d4e2c5270b48b0c49	php56-CVE-2021-21704.patch	
+205	16	skip	build/packaging	bd637c75e218f309e4e6b8adfac8836a468dba87081cb0b83e3ef5cd2e8474ee	0016-Fix-libxml2-v2.15.0-compatibility.patch	build/packaging glue, not a source security/bug backport
+206	1300	keep	CVE	b236998d240ca758c4eb537fca99d1a45430e2f4ef1b08ac22d09934170cc78d	php-5.6-CVE-2026-6722.patch	
+207	1301	keep	CVE	bd9027c5039f4dfe0c9f0c32d967cec1126ac0384205911c04d45aea956e1ce6	php-5.6-CVE-2026-7262.patch	
+208	1302	keep	CVE	b58b34689b6c7251f6de0c5fded67b0dea0185d8c0ff4486a73703c5f112c1f0	php-5.6-CVE-2026-7261.patch	
+209	1303	keep	CVE	cb5cbe257eaa220d6f1f5bbad4ef0f671773d2638d04a72f0ee3e1c9de51fa1c	php-5.6-CVE-2026-6735.patch	
+210	1304	keep	CVE	a4dc684fea4b90bdbe76500bfffae50ef051c9528ca3ef3591b2cbb91ef68b37	php-5.6-CVE-2026-14355.patch	
+211	1305	skip	build/packaging	495a7c6fc8bc99525b03cd1cf4af9f82e99756eb6a4e80fb6e359961723809a6	php-5.6.40-caching-sha2-password.patch	build/packaging glue, not a source security/bug backport
+212	1306	skip	build/packaging	9558959c19263ddaab985846db48764ed6086d626d1a23ad2e8a26e8e75b3010	php-5.6.40-mysqlnd-charset-8.4.patch	build/packaging glue, not a source security/bug backport
+213	1307	keep	CVE	6957d44e22df479595d8248f37c61167e9e98405b500722ea8c454d5654def76	php-5.6-CVE-2026-9672.patch	
+214	1308	keep	CVE	22cbce0680c1bd74dcef423425776d220d860ed63f5c66186e2e9ed9ad6c16f2	php-5.6-CVE-2026-17543.patch	
+215	1309	keep	CVE	6f2d0d75e5aaf11b8fb95016f55562434e896e81a33a8deaa73ea7a4c077d797	php-5.6-CVE-2026-7260.patch	
+216	1310	keep	CVE	e4c8c9a0518f24856b14b8379b26aa897b9d0d570840eabf4a2de37643d83f6f	php-5.6-CVE-2025-1735.patch	
+217	1311	keep	CVE	700fbad0a6ab86c3d36420ed363e506142393f42e502d2e79e9857cf25ddadf5	php-5.6-CVE-2019-9641.patch	
+218	1312	keep	CVE	91cd1d34b8b23cf60e99bbb2d415ab4dc54236e62468e25d9d103f135e28077e	php-5.6-CVE-2026-109618-109619.patch	

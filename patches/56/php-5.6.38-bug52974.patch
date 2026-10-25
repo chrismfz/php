@@ -1,0 +1,152 @@
+commit 99fdf5916eccbd72c10cc4d84693e677996b1229
+Author: Christoph M. Becker <cmbecker69@gmx.de>
+Date:   Sun Jul 22 17:42:10 2018 +0200
+
+    Fix #52974: jewish.c: compile error under Windows with GBK charset
+    
+    jewish.c includes ISO-8859-8 encoded Hebrew Hebrew month names, which
+    may cause compile errors, and is generally confusing.  We replace the
+    literal month names with appropriate escape sequences.
+
+diff --git a/NEWS b/NEWS
+index e359a8c..c2aad66 100644
+--- a/NEWS
++++ b/NEWS
+@@ -2,6 +2,10 @@ PHP                                                                        NEWS
+ |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+ ?? ??? ????, PHP 7.1.21
+ 
++- Calendar:
++  . Fixed bug #52974 (jewish.c: compile error under Windows with GBK charset).
++    (cmb)
++
+ - Filter:
+   . Fixed bug #76366 (References in sub-array for filtering breaks the filter).
+     (ZiHang Gao)
+diff --git a/ext/calendar/jewish.c b/ext/calendar/jewish.c
+index 53421aa..61c3c22 100644
+--- a/ext/calendar/jewish.c
++++ b/ext/calendar/jewish.c
+@@ -340,38 +340,38 @@ char *JewishMonthName[14] =
+ char *JewishMonthHebNameLeap[14] =
+ {
+ 	"", 
+-	"תשרי",
+-	"חשון",
+-	"כסלו",
+-	"טבת",
+-	"שבט",
+-	"אדר א'",
+-	"אדר ב'",
+-	"ניסן",
+-	"אייר",
+-	"סיון",
+-	"תמוז",
+-	"אב",
+-	"אלול"
++	"\xFA\xF9\xF8\xE9",
++	"\xE7\xF9\xE5\xEF",
++	"\xEB\xF1\xEC\xE5",
++	"\xE8\xE1\xFA",
++	"\xF9\xE1\xE8",
++	"\xE0\xE3\xF8 \xE0'",
++	"\xE0\xE3\xF8 \xE1'",
++	"\xF0\xE9\xF1\xEF",
++	"\xE0\xE9\xE9\xF8",
++	"\xF1\xE9\xe5\xEF",
++	"\xFA\xEE\xE5\xE6",
++	"\xE0\xE1",
++	"\xE0\xEC\xE5\xEC"
+ };
+ 
+ /* names for regular year */
+ char *JewishMonthHebName[14] =
+ {
+ 	"", 
+-	"תשרי",
+-	"חשון",
+-	"כסלו",
+-	"טבת",
+-	"שבט",
++	"\xFA\xF9\xF8\xE9",
++	"\xE7\xF9\xE5\xEF",
++	"\xEB\xF1\xEC\xE5",
++	"\xE8\xE1\xFA",
++	"\xF9\xE1\xE8",
+ 	"",
+-	"אדר",
+-	"ניסן",
+-	"אייר",
+-	"סיון",
+-	"תמוז",
+-	"אב",
+-	"אלול"
++	"\xE0\xE3\xF8",
++	"\xF0\xE9\xF1\xEF",
++	"\xE0\xE9\xE9\xF8",
++	"\xF1\xE9\xE5\xEF",
++	"\xFA\xEE\xE5\xE6",
++	"\xE0\xE1",
++	"\xE0\xEC\xE5\xEC"
+ };
+ 
+ /************************************************************************
+diff --git a/ext/calendar/tests/jdtojewish_hebrew.phpt b/ext/calendar/tests/jdtojewish_hebrew.phpt
+new file mode 100644
+index 0000000..ab50302
+--- /dev/null
++++ b/ext/calendar/tests/jdtojewish_hebrew.phpt
+@@ -0,0 +1,53 @@
++--TEST--
++Test all hebrew month names
++--SKIPIF--
++<?php
++if (!extension_loaded('calendar')) die('skip calendar extension not available');
++?>
++--FILE--
++<?php
++for ($year = 5000; $year <= 5001; $year++) {
++    $leap = ($year === 5001) ? 'leap' : 'normal';
++    echo "$leap year $year\n";
++    for ($month = 1; $month <= 13; $month++) {
++        $jd = jewishtojd($month, 1, $year);
++        $hebrew = jdtojewish($jd, true);
++        $hex = bin2hex($hebrew);
++        echo "$hex\n";
++    }
++    echo "\n";
++}
++?>
++===DONE===
++--EXPECT--
++normal year 5000
++e020faf9f8e920e4
++e020e7f9e5ef20e4
++e020ebf1ece520e4
++e020e8e1fa20e4
++e020f9e1e820e4
++e020e0e3f820e02720e4
++e020e0e3f820e12720e4
++e020f0e9f1ef20e4
++e020e0e9e9f820e4
++e020f1e9e5ef20e4
++e020faeee5e620e4
++e020e0e120e4
++e020e0ece5ec20e4
++
++leap year 5001
++e020faf9f8e920e4e0
++e020e7f9e5ef20e4e0
++e020ebf1ece520e4e0
++e020e8e1fa20e4e0
++e020f9e1e820e4e0
++e020e0e3f820e4e0
++e020e0e3f820e4e0
++e020f0e9f1ef20e4e0
++e020e0e9e9f820e4e0
++e020f1e9e5ef20e4e0
++e020faeee5e620e4e0
++e020e0e120e4e0
++e020e0ece5ec20e4e0
++
++===DONE===

@@ -1,0 +1,80 @@
+commit d1ccb5bd0c7f6ed981e1d0bbfc42fbf5c7561b2c
+Author: Christoph M. Becker <cmbecker69@gmx.de>
+Date:   Thu Jul 29 12:19:35 2021 +0200
+
+    Fix #81305: Built-in Webserver Drops Requests With "Upgrade" Header
+    
+    While our HTTP parser supports upgrade requests, the code using it does
+    not.  Since upgrade requests are only valid for HTTP/1.1 and we neither
+    support any higher version, nor HTTPS yet, we do not exit early in case
+    of such requests, i.e. we ignore them, what is allowed by the specs.
+    
+    We keep the supporting code in case we can meaningfully support upgrade
+    requests in the future.
+    
+    Closes GH-7316.
+
+
+diff --git a/sapi/cli/php_http_parser.c b/sapi/cli/php_http_parser.c
+index 63769c15ac..972ca08cf6 100644
+--- a/sapi/cli/php_http_parser.c
++++ b/sapi/cli/php_http_parser.c
+@@ -1339,11 +1339,16 @@ size_t php_http_parser_execute (php_http_parser *parser,
+           }
+         }
+ 
++        /* We cannot meaningfully support upgrade requests, since we only
++         * support HTTP/1 for now.
++         */
++#if 0
+         /* Exit, the rest of the connect is in a different protocol. */
+         if (parser->upgrade) {
+           CALLBACK2(message_complete);
+           return (p - data);
+         }
++#endif
+ 
+         if (parser->flags & F_SKIPBODY) {
+           CALLBACK2(message_complete);
+diff --git a/sapi/cli/tests/bug81305.phpt b/sapi/cli/tests/bug81305.phpt
+new file mode 100644
+index 0000000000..ba6b9ac8c1
+--- /dev/null
++++ b/sapi/cli/tests/bug81305.phpt
+@@ -0,0 +1,36 @@
++--TEST--
++Bug #81305 (Built-in Webserver Drops Requests With "Upgrade" Header)
++--SKIPIF--
++<?php
++include "skipif.inc";
++?>
++--FILE--
++<?php
++include "php_cli_server.inc";
++php_cli_server_start();
++
++$host = PHP_CLI_SERVER_HOSTNAME;
++$fp = php_cli_server_connect();
++
++if (fwrite($fp, <<<HEADER
++GET / HTTP/1.1
++Host: {$host}
++Upgrade: HTTP/2.0
++Connection: upgrade
++
++
++HEADER)) {
++	fpassthru($fp);
++}
++
++fclose($fp);
++?>
++--EXPECTF--
++HTTP/1.1 200 OK
++Host: %s
++Date: %s
++Connection: close
++X-Powered-By: PHP/%s
++Content-type: text/html; charset=UTF-8
++
++Hello world

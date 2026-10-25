@@ -1,0 +1,74 @@
+diff -aruN php-5.6.40.orig/ext/spl/spl_array.c php-5.6.40/ext/spl/spl_array.c
+--- php-5.6.40.orig/ext/spl/spl_array.c	2019-01-09 12:54:13.000000000 +0300
++++ php-5.6.40/ext/spl/spl_array.c	2021-05-12 15:40:45.577279703 +0300
+@@ -1212,7 +1212,7 @@
+ 	spl_array_object *intern;
+ 	zval **array;
+ 	long ar_flags = 0;
+-	zend_class_entry *ce_get_iterator = spl_ce_Iterator;
++	zend_class_entry *ce_get_iterator = spl_ce_ArrayIterator;
+ 	zend_error_handling error_handling;
+ 
+ 	if (ZEND_NUM_ARGS() == 0) {
+@@ -1247,7 +1247,7 @@
+ {
+ 	zval *object = getThis();
+ 	spl_array_object *intern = (spl_array_object*)zend_object_store_get_object(object TSRMLS_CC);
+-	zend_class_entry * ce_get_iterator = spl_ce_Iterator;
++	zend_class_entry *ce_get_iterator = spl_ce_ArrayIterator;
+ 
+ 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "C", &ce_get_iterator) == FAILURE) {
+ 		return;
+diff -aruN php-5.6.40.orig/ext/spl/tests/arrayObject___construct_error1.phpt php-5.6.40/ext/spl/tests/arrayObject___construct_error1.phpt
+--- php-5.6.40.orig/ext/spl/tests/arrayObject___construct_error1.phpt	2019-01-09 12:54:13.000000000 +0300
++++ php-5.6.40/ext/spl/tests/arrayObject___construct_error1.phpt	2021-05-12 15:43:18.401644851 +0300
+@@ -20,6 +20,6 @@
+ ?>
+ --EXPECTF--
+ Bad iterator type:
+-ArrayObject::__construct() expects parameter 3 to be a class name derived from Iterator, 'Exception' given(6)
++ArrayObject::__construct() expects parameter 3 to be a class name derived from ArrayIterator, 'Exception' given(6)
+ Non-existent class:
+-ArrayObject::__construct() expects parameter 3 to be a class name derived from Iterator, 'nonExistentClassName' given(13)
++ArrayObject::__construct() expects parameter 3 to be a class name derived from ArrayIterator, 'nonExistentClassName' given(13)
+diff -aruN php-5.6.40.orig/ext/spl/tests/arrayObject_setIteratorClass_error1.phpt php-5.6.40/ext/spl/tests/arrayObject_setIteratorClass_error1.phpt
+--- php-5.6.40.orig/ext/spl/tests/arrayObject_setIteratorClass_error1.phpt	2019-01-09 12:54:13.000000000 +0300
++++ php-5.6.40/ext/spl/tests/arrayObject_setIteratorClass_error1.phpt	2021-05-12 15:44:35.451828965 +0300
+@@ -43,14 +43,14 @@
+ 
+ ?>
+ --EXPECTF--
+-Warning: ArrayObject::setIteratorClass() expects parameter 1 to be a class name derived from Iterator, 'nonExistentClass' given in %s on line 4
++Warning: ArrayObject::setIteratorClass() expects parameter 1 to be a class name derived from ArrayIterator, 'nonExistentClass' given in %s on line %d
+   a=>1
+   b=>2
+   c=>3
+ 
+-Warning: ArrayObject::setIteratorClass() expects parameter 1 to be a class name derived from Iterator, 'stdClass' given in %s on line 14
++Warning: ArrayObject::setIteratorClass() expects parameter 1 to be a class name derived from ArrayIterator, 'stdClass' given in %s on line %d
+   a=>1
+   b=>2
+   c=>3
+-string(113) "ArrayObject::__construct() expects parameter 3 to be a class name derived from Iterator, 'nonExistentClass' given"
+-string(105) "ArrayObject::__construct() expects parameter 3 to be a class name derived from Iterator, 'stdClass' given"
++string(118) "ArrayObject::__construct() expects parameter 3 to be a class name derived from ArrayIterator, 'nonExistentClass' given"
++string(110) "ArrayObject::__construct() expects parameter 3 to be a class name derived from ArrayIterator, 'stdClass' given"
+diff -aruN php-5.6.40.orig/ext/spl/tests/bug80719.phpt php-5.6.40/ext/spl/tests/bug80719.phpt
+--- php-5.6.40.orig/ext/spl/tests/bug80719.phpt	1970-01-01 03:00:00.000000000 +0300
++++ php-5.6.40/ext/spl/tests/bug80719.phpt	2021-05-12 15:45:26.416946823 +0300
+@@ -0,0 +1,15 @@
++--TEST--
++Bug #80719: Iterating after failed ArrayObject::setIteratorClass() causes Segmentation fault
++--FILE--
++<?php
++
++$array = new ArrayObject([42]);
++$array->setIteratorClass(FilterIterator::class);
++foreach ($array as $v) {
++    var_dump($v);
++}
++
++?>
++--EXPECTF--
++Warning: ArrayObject::setIteratorClass() expects parameter 1 to be a class name derived from ArrayIterator, 'FilterIterator' given in %s on line %d
++int(42)
