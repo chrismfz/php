@@ -82,7 +82,7 @@ SRC_DIR="${BUILD_ROOT}/php-${PHP_RELEASE}"
 
 OPENSSL_VERSION="${OPENSSL_VERSION:-3.5.9}"
 OPENSSL_PREFIX="${OPENSSL_PREFIX:-${NGM_ROOT}/openssl-3.5}"
-CURL_VERSION="${CURL_VERSION:-8.21.0}"
+CURL_VERSION="${CURL_VERSION:-8.23.0}"
 CURL_PREFIX="${CURL_PREFIX:-${NGM_ROOT}/curl-gnutls}"
 MCRYPT_VERSION="${MCRYPT_VERSION:-2.5.8}"
 MCRYPT_PREFIX="${MCRYPT_PREFIX:-${NGM_ROOT}/libmcrypt}"
@@ -95,11 +95,11 @@ MCRYPT_PREFIX="${MCRYPT_PREFIX:-${NGM_ROOT}/libmcrypt}"
 # OpenSSL — otherwise a build for one version rebuilds the shared prefix out from
 # under the others.
 OPENSSL_SHA256="${OPENSSL_SHA256:-603f5602e2eef00d77fbd429d34dcd5822bb301757a1bc9cdb24c670f1eb859a}"  # openssl-3.5.9.tar.gz
-CURL_SHA256="${CURL_SHA256:-aa1b66a70eace83dc624508745646c08ae561de512ab403adffb93ac87fc72e6}"        # curl-8.21.0.tar.xz
+CURL_SHA256="${CURL_SHA256:-8dadd7d2536a314f982ad05a651b713f426bf7d02cc2c76cffb9796f2218e6c5}"        # curl-8.23.0.tar.xz
 MCRYPT_SHA256="${MCRYPT_SHA256:-e4eb6c074bbab168ac47b947c195ff8cef9d51a211cdd18ca9c9ef34d27a373e}"     # libmcrypt-2.5.8.tar.gz
 # Snuffleupagus source tarball digest — same policy as above (empty warns with
 # the computed digest; non-empty enforces, mismatch aborts). Pin per SNUFFLEUPAGUS_VERSION.
-SNUFFLEUPAGUS_SHA256="${SNUFFLEUPAGUS_SHA256:-}"                                                       # v0.14.0 GitHub tag archive
+SNUFFLEUPAGUS_SHA256="${SNUFFLEUPAGUS_SHA256:-080cf7e24d15a8650e271837030fca546e627c7a4c7317710c683282fdcb71c6}"                                                       # v0.14.0 GitHub tag archive
 
 JOBS="${JOBS:-$(nproc 2>/dev/null || echo 2)}"
 FORCE="${FORCE:-0}"
