@@ -740,8 +740,12 @@ EOF
 ; log sink so the module loads cleanly and enforces NOTHING until real rules land.
 sp.log_media("syslog");
 RULES
-        chmod 640 "${SP_RULES_DIR}/00-ngm-default.rules"
       fi
+      # World-readable like the .ini files: a per-customer FPM master and the
+      # CLI run as the customer, and SP aborts PHP startup ("Could not open
+      # configuration file … Permission denied") on a rules file it cannot read.
+      # Outside the if, so an install from an older build.sh (0640) is fixed too.
+      chmod 644 "${SP_RULES_DIR}/00-ngm-default.rules"
       cat > "$sp_ini" <<EOF
 ; Managed by build.sh. Snuffleupagus PHP hardening module (loads last).
 ; Real rules render into ${SP_RULES_DIR} (NGM/CFM manager); monitor-first.
