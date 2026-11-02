@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# build.sh — build a legacy PHP (5.6, 7.0/7.1/7.2/7.3) for NGM, patched.
+# build.sh — build a legacy PHP (5.3, 5.6, 7.0/7.1/7.2/7.3) for NGM, patched.
 #
 # One builder, one repo, every source-built minor. Pick it with PHP_MINOR
 # (default 7.3 — the closest to the still-packaged 7.4 and therefore the easiest):
@@ -14,7 +14,7 @@
 #   OpenSSL 3.5.x: /opt/ngm/php/openssl-3.5   (legacy provider on)
 #   curl (GnuTLS): /opt/ngm/php/curl-gnutls   (so ext/curl can't drag a second
 #                                              OpenSSL into the process)
-#   libmcrypt:     /opt/ngm/php/libmcrypt      (5.6/7.0/7.1 — removed in 7.2)
+#   libmcrypt:     /opt/ngm/php/libmcrypt      (5.3/5.6/7.0/7.1 — removed in 7.2)
 #
 # This repo carries only the builder + the CloudLinux patch series + our own
 # patches + the ionCube loaders. The PHP source is the PRISTINE php.net release
@@ -22,7 +22,7 @@
 # SRPM is shaped, and the only sane way to serve many minors from one repo.
 #
 # Env knobs:
-#   PHP_MINOR=5.6|7.0|7.1|7.2|7.3  which minor to build (default 7.3)
+#   PHP_MINOR=5.3|5.6|7.0|7.1|7.2|7.3  which minor to build (default 7.3)
 #   PHP_RELEASE=7.3.33          pin an exact patch release (default: newest known)
 #   FORCE=1                     rebuild PHP even if the prefix already exists
 #   FORCE_DEPS=1                also rebuild the shared OpenSSL/curl/libmcrypt
@@ -42,12 +42,13 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 PHP_MINOR="${PHP_MINOR:-7.3}"
 case "$PHP_MINOR" in
+  5.3) PHP_RELEASE_DEFAULT="5.3.29" ;;
   5.6) PHP_RELEASE_DEFAULT="5.6.40" ;;
   7.0) PHP_RELEASE_DEFAULT="7.0.33" ;;
   7.1) PHP_RELEASE_DEFAULT="7.1.33" ;;
   7.2) PHP_RELEASE_DEFAULT="7.2.34" ;;
   7.3) PHP_RELEASE_DEFAULT="7.3.33" ;;
-  *)   echo "ERROR: unsupported PHP_MINOR '${PHP_MINOR}' (expected 5.6|7.0|7.1|7.2|7.3)" >&2; exit 2 ;;
+  *)   echo "ERROR: unsupported PHP_MINOR '${PHP_MINOR}' (expected 5.3|5.6|7.0|7.1|7.2|7.3)" >&2; exit 2 ;;
 esac
 PHP_SERIES="$PHP_MINOR"
 PHP_RELEASE="${PHP_RELEASE:-$PHP_RELEASE_DEFAULT}"
@@ -56,18 +57,23 @@ PHP_MINOR_NODOT="${PHP_MINOR//./}"        # 7.3 -> 73 (patch-series dir + import
 # mcrypt was deprecated in 7.1 and REMOVED from core in 7.2 — only build/link it
 # where the extension still exists.
 USE_MCRYPT=0
-case "$PHP_MINOR" in 5.6|7.0|7.1) USE_MCRYPT=1 ;; esac
+case "$PHP_MINOR" in 5.3|5.6|7.0|7.1) USE_MCRYPT=1 ;; esac
 
 # PHP 5: the old `mysql` extension still exists (removed in 7.0) and customers'
 # code still calls mysql_*(), so 5.x builds it on mysqlnd. Snuffleupagus needs 7.0+.
 PHP5=0
 case "$PHP_MINOR" in 5.*) PHP5=1 ;; esac
 
+# Zend OPcache was bundled from 5.5 on; 5.3 has none to build, load or verify.
+USE_OPCACHE=1
+case "$PHP_MINOR" in 5.3) USE_OPCACHE=0 ;; esac
+
 # Known-good sha256 of the pristine php.net tarball, per release. Empty = not
 # pinned yet: the download still happens over TLS-authenticated php.net and the
 # computed digest is printed, but is not enforced until a value is filled in
 # here (do that once, from a build you trust). A MISMATCH always aborts.
 declare -A PHP_SHA256=(
+  [5.3.29]="8438c2f14ab8f3d6cd2495aa37de7b559e33b610f9ab264f0c61b531bf0c262d"
   [5.6.40]="1369a51eee3995d7fbd1c5342e5cc917760e276d561595b6052b21ace2656d1c"
   [7.0.33]="ab8c5be6e32b1f8d032909dedaaaa4bbb1a209e519abb01a52ce3914f9a13d96"
   [7.1.33]="bd7c0a9bd5433289ee01fd440af3715309faf583f75832b64fe169c100d52968"
@@ -535,7 +541,7 @@ apply_patches() {
 
 build_php() {
   local openssl_libdir curl_libdir mcrypt_libdir openssl_pc_prefix
-  local -a mcrypt_configure=() php5_configure=()
+  local -a mcrypt_configure=() php5_configure=() opcache_configure=()
 
   if [ -x "${PREFIX}/sbin/php-fpm" ] && [ "$FORCE" != "1" ]; then
     die "PHP ${PHP_SERIES} already exists at ${PREFIX}/sbin/php-fpm (use FORCE=1 to rebuild)."
@@ -560,6 +566,7 @@ build_php() {
     mcrypt_configure=("--with-mcrypt=${MCRYPT_PREFIX}")
   fi
   [ "$PHP5" = "1" ] && php5_configure=("--with-mysql=mysqlnd")
+  [ "$USE_OPCACHE" = "1" ] && opcache_configure=("--enable-opcache")
 
   pkg-config --exists openssl || die "private OpenSSL pkg-config metadata not found."
   openssl_pc_prefix="$(pkg-config --variable=prefix openssl)"
@@ -583,7 +590,7 @@ build_php() {
       --with-openssl \
       --with-zlib \
       --enable-pdo \
-      --enable-opcache \
+      "${opcache_configure[@]}" \
       --enable-mbstring \
       --enable-bcmath \
       --enable-calendar \
@@ -712,14 +719,18 @@ EOF
   fi
 
   extension_dir="$("${PREFIX}/bin/php-config" --extension-dir)"
-  opcache_so="${extension_dir}/opcache.so"
-  [ -r "$opcache_so" ] || die "OPcache shared extension missing: ${opcache_so}"
-  cat > "$opcache_ini" <<EOF
+  if [ "$USE_OPCACHE" = "1" ]; then
+    opcache_so="${extension_dir}/opcache.so"
+    [ -r "$opcache_so" ] || die "OPcache shared extension missing: ${opcache_so}"
+    cat > "$opcache_ini" <<EOF
 ; Managed by build.sh. Load after ionCube.
 zend_extension=${opcache_so}
 EOF
-  chmod 644 "$opcache_ini"
-  log "enabled Zend OPcache"
+    chmod 644 "$opcache_ini"
+    log "enabled Zend OPcache"
+  else
+    rm -f "$opcache_ini"
+  fi
 
   # Snuffleupagus loader + monitor-safe starter ruleset. The module ships ONLY
   # with a ruleset: this starter only sets a log sink so SP loads and enforces
@@ -790,8 +801,10 @@ verify() {
     log "testing ionCube Loader through production PHP configuration"
     "$php_bin" -r 'if (!function_exists("ioncube_loader_version")) { fwrite(STDERR,"ionCube Loader is not active\n"); exit(1); } echo ioncube_loader_version(),"\n";'
   fi
-  log "testing Zend OPcache through production PHP configuration"
-  "$php_bin" -r 'if (!function_exists("opcache_get_status")) { fwrite(STDERR,"Zend OPcache is not active\n"); exit(1); }'
+  if [ "$USE_OPCACHE" = "1" ]; then
+    log "testing Zend OPcache through production PHP configuration"
+    "$php_bin" -r 'if (!function_exists("opcache_get_status")) { fwrite(STDERR,"Zend OPcache is not active\n"); exit(1); }'
+  fi
 
   if [ "$ENABLE_SNUFFLEUPAGUS" = "1" ]; then
     log "testing Snuffleupagus loads with its ruleset through production PHP configuration"
@@ -865,7 +878,8 @@ run_regression_tests() {
 
   # test-openssl35.sh: linkage, TLS, RSA/AES, CSR/X509, PKCS#12, FPM config.
   # test-openssl35-legacy.sh: the legacy provider (MD4/RC4/DES/... old code uses).
-  for test in test-openssl35.sh test-openssl35-legacy.sh; do
+  # test-openssl35-phar.sh: an OpenSSL-signed PHAR verifies, a tampered one fails.
+  for test in test-openssl35.sh test-openssl35-legacy.sh test-openssl35-phar.sh; do
     [ -r "${REPO_DIR}/${test}" ] || die "required regression test missing: ${REPO_DIR}/${test}"
     log "running ${test} against ${PREFIX}"
     PHP_PREFIX="$PREFIX" PHP_RELEASE="$PHP_RELEASE" OPENSSL_PREFIX="$OPENSSL_PREFIX" \

@@ -1,12 +1,11 @@
 # Legacy PHP for NGM — security-patched, source-built
 
 > **This repo is `chrismfz/php`** (renamed from `chrismfz/php7`; GitHub redirects
-> the old url), the one home for every source-built legacy PHP. It builds **5.6**
-> and **7.0–7.3** today (5.6 moved in from the retired `chrismfz/php56` fork);
-> 5.3 follows as `patches/53/` on its pristine tarball and stays in
-> `chrismfz/php53` until then.
+> the old url), the one home for every source-built legacy PHP: **5.3**, **5.6** and
+> **7.0–7.3**. 5.3 and 5.6 moved in from the retired `chrismfz/php53` /
+> `chrismfz/php56` source forks, which are archived.
 
-One builder for the end-of-life **PHP 5.6 / 7.0 / 7.1 / 7.2 / 7.3** runtimes NGM
+One builder for the end-of-life **PHP 5.3 / 5.6 / 7.0 / 7.1 / 7.2 / 7.3** runtimes NGM
 compiles and runs past php.net's EOL. Neither Remi (EL starts at 7.4) nor — on
 EL — anyone else packages these, so NGM builds them from source into
 `/opt/ngm/php/<minor>` and auto-discovers the result. On Debian these come from
@@ -15,7 +14,7 @@ Sury; this tree is for the EL gap.
 This repo carries no PHP source, only:
 
 - **`build.sh`** — one version-parameterized builder
-  (`PHP_MINOR=5.6|7.0|7.1|7.2|7.3`, default 7.3);
+  (`PHP_MINOR=5.3|5.6|7.0|7.1|7.2|7.3`, default 7.3);
 - **`patches/<nn>/`** — the CloudLinux security series per minor;
 - **`patches-local/<nn>/`** — our hand-maintained overlay per minor;
 - **`ioncube/`** — the bundled ionCube loaders;
@@ -34,9 +33,10 @@ collide with the host:
 - a **GnuTLS libcurl** (so `ext/curl` can't drag a second OpenSSL into the
   process);
 - the bundled **ionCube** loader and **Zend OPcache**;
-- for **5.6 / 7.0 / 7.1** only, a private **libmcrypt** (`ext/mcrypt` was removed
-  from core in 7.2); **5.6** also builds the old `mysql` extension (on mysqlnd).
-  Snuffleupagus needs 7.0+, so 5.6 refuses `ENABLE_SNUFFLEUPAGUS=1`.
+- for **5.3 / 5.6 / 7.0 / 7.1** only, a private **libmcrypt** (`ext/mcrypt` was
+  removed from core in 7.2); **5.x** also builds the old `mysql` extension (on
+  mysqlnd). Snuffleupagus needs 7.0+, so 5.x refuses `ENABLE_SNUFFLEUPAGUS=1`.
+  **5.3** has no Zend OPcache (bundled from 5.5 on), so none is built or loaded.
 
 NGM auto-discovers the result at `/opt/ngm/php/<minor>/sbin/php-fpm`; nothing else
 on the host is touched.
@@ -50,6 +50,7 @@ sudo ./build.sh
 # any other minor
 sudo PHP_MINOR=7.2 ./build.sh
 sudo PHP_MINOR=5.6 ./build.sh
+sudo PHP_MINOR=5.3 ./build.sh
 ```
 
 Useful env: `APPLY_PATCHES=0` builds pristine (no security series);
@@ -58,7 +59,7 @@ Useful env: `APPLY_PATCHES=0` builds pristine (no security series);
 `RUN_REGRESSION_TESTS=0` skips the post-build suite;
 `PHP_RELEASE=7.3.33` pins an exact patch release.
 
-The default patch releases are the last of each line: **5.6.40, 7.0.33, 7.1.33,
+The default patch releases are the last of each line: **5.3.29, 5.6.40, 7.0.33, 7.1.33,
 7.2.34, 7.3.33.**
 
 ## Our own patches (`patches-local/<nn>/*.patch`)
@@ -121,8 +122,9 @@ git diff patches/73/
 The private **OpenSSL** is pinned the same way (`build.sh`: `OPENSSL_VERSION` +
 `OPENSSL_SHA256`, currently the latest **3.5 LTS**) — deliberately not "latest at
 build time": pinning keeps the build reproducible, lets the tarball be
-sha256-verified before it touches the crypto path, and keeps php53/php56/php
-agreeing on the ONE shared `/opt/ngm/php/openssl-3.5` prefix. To learn when a newer
+sha256-verified before it touches the crypto path, and keeps every minor on the
+ONE shared `/opt/ngm/php/openssl-3.5` prefix (one repo, one pin — the same holds for
+the shared `curl-gnutls` prefix). To learn when a newer
 3.5 LTS ships, run **`./tools/check-deps.py`**. curl and libmcrypt are sha-pinned
 too.
 
@@ -148,6 +150,18 @@ OpenSSL 3.5.9 + Snuffleupagus 0.14.0 and the 2026-10-23 CloudLinux refresh below
 those are apply-verified on the pristine tarballs, host build pending. Every
 dependency tarball (OpenSSL / curl / libmcrypt) and every PHP release is now
 **sha256-pinned and verified at build time**.
+
+**5.3 source:** from `ea-php53-php-5.3.29-29.el8.cloudlinux.69` — 323 of 362
+applied patches kept, with the foundational `p_option.patch` and CloudLinux's OpenSSL
+1.1 port force-kept (`patches-local/53/include`); 152 CVEs. On the pristine 5.3.29
+tarball the whole series applies with **no rejects and no excludes**, and every `.re`
+change ships with its generated `.c`, so no autoconf/bison/re2c toolchain is needed
+(the old fork needed one only because a raw git tree has no `configure`). CloudLinux
+builds ea-php53 only on EL8 (OpenSSL 1.1), so two small patches on top are ours:
+`patches-local/53/ngm-compat-openssl3.patch` (the `RSA_SSLV23_PADDING` guard CloudLinux
+ships for 5.6/7.x, plus `OPENSSL_NO_SSL3` guards on the SSLv3 methods) and
+`ngm-compat-openssl-dss1.patch` (keeps `OPENSSL_ALGO_DSS1` mapped to SHA-1, as the
+old fork did, so DSA signing code keeps working).
 
 **5.6 source:** from `ea-php56-php-5.6.40-25.el8.cloudlinux.18` — 183 of 218
 applied patches kept, plus CloudLinux's OpenSSL 1.1 port and OpenSSL 3.0 follow-up
@@ -181,6 +195,33 @@ build pending. 7.0/7.1 keep `ext/mcrypt` (private libmcrypt), removed in 7.2.
 allocator overflow) now ends the worker with `_exit(1)` instead of a catchable
 fatal error, so shutdown functions don't run and the client sees a 502; on 7.x
 `session.upload_progress` is also disabled.
+
+## History
+
+This repo started as `chrismfz/php7` (7.0–7.3 only) and was renamed `chrismfz/php`
+on 2026-10-23. 5.6 (2026-10-23) and 5.3 (2026-11-02) moved in from their own source
+forks, which are archived read-only; their git history is where to look for the
+reasoning behind older decisions:
+
+- **`chrismfz/php56`** — PHP 5.6.40 from the
+  [`boogermann/php5`](https://github.com/boogermann/php5) fork, with the CloudLinux
+  series on top (40 excludes, because boogermann already carried many fixes in
+  another shape). Its in-tree OpenSSL port (`49bff4ec`, on the boogermann base) is
+  replaced here by CloudLinux's own `php-5.6.40-openssl11.patch` +
+  `php-5.6.40-fix-for-openssl-3.0.x.patch`. Its `CVE-2019-11048-rfc1867-size_t.patch`
+  existed only because boogermann had half-fixed that overflow (`int` → `unsigned
+  int`); on the pristine base CloudLinux's full `size_t` fix applies as shipped.
+- **`chrismfz/php53`** — a raw PHP 5.3.29 git tree, so it needed a private
+  autoconf 2.59 / bison 2.6.4 / re2c toolchain to generate `configure` and the
+  parsers; the tarball ships them. Its in-tree OpenSSL port (`2cfb431` for 1.1,
+  `44f26af` for 3.5) is replaced by CloudLinux's `php-5.3.29-openssl11.patch` plus
+  our `patches-local/53/ngm-compat-openssl3.patch` (the SSLv23-padding and SSLv3
+  guards) and `ngm-compat-openssl-dss1.patch` (DSS1 → SHA-1, as the fork had); the
+  `OBJ_create` duplicate-OID fix is already in CloudLinux's patch.
+
+Both moves were validated old-vs-new on the ngm devbox (identical modules, constants,
+functions and library versions; phpt failure lists compared) before the forks were
+retired.
 
 ## Licence
 

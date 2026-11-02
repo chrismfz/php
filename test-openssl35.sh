@@ -78,10 +78,10 @@ log "RSA SHA-256 sign / verify"
 "$PHP_BIN" -n -r '
 $k = openssl_pkey_new(array("private_key_bits"=>2048,"private_key_type"=>OPENSSL_KEYTYPE_RSA));
 if ($k === false) exit(1);
-if (!openssl_sign("php7-openssl35", $sig, $k, OPENSSL_ALGO_SHA256)) exit(2);
+if (!openssl_sign("ngm-openssl35", $sig, $k, "sha256")) exit(2);
 $d = openssl_pkey_get_details($k);
 $pub = openssl_pkey_get_public($d["key"]);
-$v = openssl_verify("php7-openssl35", $sig, $pub, OPENSSL_ALGO_SHA256);
+$v = openssl_verify("ngm-openssl35", $sig, $pub, "sha256");
 var_dump($v === 1);
 if ($v !== 1) exit(3);
 '
@@ -91,7 +91,7 @@ log "RSA OAEP encrypt / decrypt"
 $k = openssl_pkey_new(array("private_key_bits"=>2048,"private_key_type"=>OPENSSL_KEYTYPE_RSA));
 $d = openssl_pkey_get_details($k);
 $pub = openssl_pkey_get_public($d["key"]);
-$plain = "php7-openssl35-rsa";
+$plain = "ngm-openssl35-rsa";
 if (!openssl_public_encrypt($plain, $enc, $pub, OPENSSL_PKCS1_OAEP_PADDING)) exit(1);
 if (!openssl_private_decrypt($enc, $dec, $k, OPENSSL_PKCS1_OAEP_PADDING)) exit(2);
 var_dump($dec === $plain);
@@ -100,7 +100,7 @@ if ($dec !== $plain) exit(3);
 
 log "AES-256-CBC encrypt / decrypt"
 "$PHP_BIN" -n -r '
-$plain = "php7-openssl35-aes";
+$plain = "ngm-openssl35-aes";
 $key = hash("sha256", "test-key", true);
 $iv = str_repeat("A", 16);
 $enc = openssl_encrypt($plain, "aes-256-cbc", $key, OPENSSL_RAW_DATA, $iv);

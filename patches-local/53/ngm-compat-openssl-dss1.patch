@@ -1,0 +1,50 @@
+From: NGM <ngm@localhost>
+Subject: [PATCH] ngm-compat: keep OPENSSL_ALGO_DSS1 working on OpenSSL >= 1.1
+
+What: on OpenSSL >= 1.1 keep the OPENSSL_ALGO_DSS1 constant and map it to
+EVP_sha1(). DSS1 was OpenSSL's name for DSA-with-SHA-1; 1.1 removed the
+EVP_dss1() alias, and plain SHA-1 is the same digest (OpenSSL picks the DSA
+signature scheme from the key).
+
+Why ours: CloudLinux's php-5.3.29-openssl11.patch (force-kept) follows
+upstream 5.6/7.x and drops the constant on OpenSSL >= 1.1. The former
+chrismfz/php53 fork kept it, mapped to SHA-1, so 5.3 code calling
+openssl_sign()/openssl_verify() with OPENSSL_ALGO_DSS1 worked on our builds;
+without this it gets "Use of undefined constant" + "Unknown signature
+algorithm" (ext/openssl/tests/bug41033.phpt). This keeps the 5.3 runtime
+behaving as it did. 5.6/7.x here match upstream (no DSS1), as before.
+
+Behaviour change: none versus the previous 5.3 build; versus pristine
+CloudLinux on OpenSSL 1.1+, OPENSSL_ALGO_DSS1 exists and works.
+
+Delete when: 5.3 is retired, or we decide 5.3 should match upstream.
+---
+--- a/ext/openssl/openssl.c
++++ b/ext/openssl/openssl.c
+@@ -1072,11 +1072,14 @@
+ 			mdtype = (EVP_MD *) EVP_md2();
+ 			break;
+ #endif
+-#if OPENSSL_VERSION_NUMBER < 0x10100000L || defined (LIBRESSL_VERSION_NUMBER)
+ 		case OPENSSL_ALGO_DSS1:
++#if OPENSSL_VERSION_NUMBER < 0x10100000L || defined (LIBRESSL_VERSION_NUMBER)
+ 			mdtype = (EVP_MD *) EVP_dss1();
+-			break;
++#else
++			/* DSS1 was DSA-with-SHA-1; OpenSSL 1.1 dropped the alias, SHA-1 is the digest */
++			mdtype = (EVP_MD *) EVP_sha1();
+ #endif
++			break;
+ 		default:
+ 			return NULL;
+ 			break;
+@@ -1164,9 +1167,7 @@
+ #ifdef HAVE_OPENSSL_MD2_H
+ 	REGISTER_LONG_CONSTANT("OPENSSL_ALGO_MD2", OPENSSL_ALGO_MD2, CONST_CS|CONST_PERSISTENT);
+ #endif
+-#if OPENSSL_VERSION_NUMBER < 0x10100000L || defined (LIBRESSL_VERSION_NUMBER)
+ 	REGISTER_LONG_CONSTANT("OPENSSL_ALGO_DSS1", OPENSSL_ALGO_DSS1, CONST_CS|CONST_PERSISTENT);
+-#endif
+ 
+ 	/* flags for S/MIME */
+ 	REGISTER_LONG_CONSTANT("PKCS7_DETACHED", PKCS7_DETACHED, CONST_CS|CONST_PERSISTENT);

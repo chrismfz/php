@@ -1,0 +1,16 @@
+# Force-kept patches: basenames the importer's classify() would otherwise skip,
+# but which THIS build needs. The importer never second-guesses this list.
+
+# Foundational: adds the 'p' (path) zend_parse_parameters type and DEFINES the
+# CHECK_NULL_PATH / CHECK_ZVAL_NULL_PATH macros in Zend/zend_API.h. Several kept
+# CVE/bug patches (e.g. CVE-2015-4598, bug71860) call CHECK_NULL_PATH, so without
+# this the link fails with "undefined reference to CHECK_NULL_PATH". Named for the
+# '-p' option so the CVE/bug/hardened filename heuristic misses it.
+p_option.patch
+
+# OpenSSL 1.1 API port. classify() files it as build/packaging, but we build
+# against a private OpenSSL 3.5 and pristine 5.3.29's ext/openssl does not compile
+# against the opaque-struct API without it. It replaces the OpenSSL port the former
+# chrismfz/php53 carried in its tree; anything 3.x still needs on top of it is an
+# ngm-compat patch in this directory.
+php-5.3.29-openssl11.patch
