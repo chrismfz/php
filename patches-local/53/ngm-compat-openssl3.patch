@@ -1,18 +1,26 @@
 From: NGM <ngm@localhost>
-Subject: [PATCH] ngm-compat: build ext/openssl against OpenSSL 3 (RSA_SSLV23_PADDING)
+Subject: [PATCH] ngm-compat: build ext/openssl against OpenSSL 3 (SSLv23 padding, SSLv3)
 
-What: guard the OPENSSL_SSLV23_PADDING constant registration with
-#ifdef RSA_SSLV23_PADDING, which OpenSSL 3.0 removed. Without it
-ext/openssl does not compile against our private OpenSSL 3.5.
+What: two things OpenSSL 3 (as we build it) no longer has.
+ - ext/openssl/openssl.c: guard the OPENSSL_SSLV23_PADDING constant with
+   #ifdef RSA_SSLV23_PADDING (removed in 3.0). Byte-identical to the hunk
+   CloudLinux ships for 5.6/7.x as php-<ver>-fix-for-openssl-3.0.x.patch.
+ - ext/openssl/xp_ssl.c: guard the SSLv3 client/server methods with
+   #ifdef OPENSSL_NO_SSL3, raising the same "not compiled into the OpenSSL
+   library" warning the SSLv2 branch already raises. Same shape as upstream
+   PHP 5.6's xp_ssl.c. Without it the build links against
+   SSLv3_{client,server}_method, which our OpenSSL lacks (GCC 14 reports the
+   implicit declaration; ld fails). The method pointer becomes const, as
+   OpenSSL has returned for years.
 
-Why ours: CloudLinux ships this exact hunk for 5.6/7.x as
-php-<ver>-fix-for-openssl-3.0.x.patch, but builds ea-php53 only on EL8
-(OpenSSL 1.1), so the 5.3 series has no OpenSSL-3 follow-up to its
-php-5.3.29-openssl11.patch (which we force-keep). The hunk is
-byte-identical to CloudLinux's 5.6 one.
+Why ours: CloudLinux builds ea-php53 only on EL8 (OpenSSL 1.1, which still
+had both), so the 5.3 series has no OpenSSL-3 follow-up to its
+php-5.3.29-openssl11.patch (force-kept). The former chrismfz/php53 fork
+carried the same two guards in its tree.
 
-Behaviour change: on OpenSSL 3 the PHP constant OPENSSL_SSLV23_PADDING is
-not defined (the padding mode no longer exists). Same as 5.6/7.x here.
+Behaviour change: on OpenSSL 3, OPENSSL_SSLV23_PADDING is undefined and an
+explicit sslv3:// stream fails with a warning instead of negotiating SSLv3.
+Same as 5.6/7.x here.
 
 Delete when: CloudLinux ships an OpenSSL-3 follow-up for ea-php53, or 5.3
 is retired.
@@ -29,3 +37,44 @@ is retired.
  	REGISTER_LONG_CONSTANT("OPENSSL_NO_PADDING", RSA_NO_PADDING, CONST_CS|CONST_PERSISTENT);
  	REGISTER_LONG_CONSTANT("OPENSSL_PKCS1_OAEP_PADDING", RSA_PKCS1_OAEP_PADDING, CONST_CS|CONST_PERSISTENT);
  
+--- a/ext/openssl/xp_ssl.c
++++ b/ext/openssl/xp_ssl.c
+@@ -309,7 +309,7 @@
+ 		php_stream_xport_crypto_param *cparam
+ 		TSRMLS_DC)
+ {
+-	SSL_METHOD *method;
++	const SSL_METHOD *method;
+ 	
+ 	if (sslsock->ssl_handle) {
+ 		if (sslsock->s.is_blocked) {
+@@ -338,9 +338,14 @@
+ 			break;
+ #endif
+ 		case STREAM_CRYPTO_METHOD_SSLv3_CLIENT:
++#ifdef OPENSSL_NO_SSL3
++			php_error_docref(NULL TSRMLS_CC, E_WARNING, "SSLv3 support is not compiled into the OpenSSL library PHP is linked against");
++			return -1;
++#else
+ 			sslsock->is_client = 1;
+ 			method = SSLv3_client_method();
+ 			break;
++#endif
+ 		case STREAM_CRYPTO_METHOD_TLS_CLIENT:
+ 			sslsock->is_client = 1;
+ 			method = TLSv1_client_method();
+@@ -350,9 +355,14 @@
+ 			method = SSLv23_server_method();
+ 			break;
+ 		case STREAM_CRYPTO_METHOD_SSLv3_SERVER:
++#ifdef OPENSSL_NO_SSL3
++			php_error_docref(NULL TSRMLS_CC, E_WARNING, "SSLv3 support is not compiled into the OpenSSL library PHP is linked against");
++			return -1;
++#else
+ 			sslsock->is_client = 0;
+ 			method = SSLv3_server_method();
+ 			break;
++#endif
+ 		case STREAM_CRYPTO_METHOD_SSLv2_SERVER:
+ #if defined(OPENSSL_NO_SSL2) || OPENSSL_VERSION_NUMBER >= 0x10100000L
+ 			php_error_docref(NULL TSRMLS_CC, E_WARNING, "SSLv2 support is not compiled into the OpenSSL library PHP is linked against");
