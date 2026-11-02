@@ -157,9 +157,11 @@ applied patches kept, with the foundational `p_option.patch` and CloudLinux's Op
 tarball the whole series applies with **no rejects and no excludes**, and every `.re`
 change ships with its generated `.c`, so no autoconf/bison/re2c toolchain is needed
 (the old fork needed one only because a raw git tree has no `configure`). CloudLinux
-builds ea-php53 only on EL8 (OpenSSL 1.1), so the one OpenSSL-3 hunk on top is ours:
-`patches-local/53/ngm-compat-openssl3.patch`, the same `RSA_SSLV23_PADDING` guard
-CloudLinux ships for 5.6/7.x.
+builds ea-php53 only on EL8 (OpenSSL 1.1), so two small patches on top are ours:
+`patches-local/53/ngm-compat-openssl3.patch` (the `RSA_SSLV23_PADDING` guard CloudLinux
+ships for 5.6/7.x, plus `OPENSSL_NO_SSL3` guards on the SSLv3 methods) and
+`ngm-compat-openssl-dss1.patch` (keeps `OPENSSL_ALGO_DSS1` mapped to SHA-1, as the
+old fork did, so DSA signing code keeps working).
 
 **5.6 source:** from `ea-php56-php-5.6.40-25.el8.cloudlinux.18` — 183 of 218
 applied patches kept, plus CloudLinux's OpenSSL 1.1 port and OpenSSL 3.0 follow-up
@@ -214,7 +216,8 @@ reasoning behind older decisions:
   parsers; the tarball ships them. Its in-tree OpenSSL port (`2cfb431` for 1.1,
   `44f26af` for 3.5) is replaced by CloudLinux's `php-5.3.29-openssl11.patch` plus
   our `patches-local/53/ngm-compat-openssl3.patch` (the SSLv23-padding and SSLv3
-  guards; the `OBJ_create` duplicate-OID fix is already in CloudLinux's patch).
+  guards) and `ngm-compat-openssl-dss1.patch` (DSS1 → SHA-1, as the fork had); the
+  `OBJ_create` duplicate-OID fix is already in CloudLinux's patch.
 
 Both moves were validated old-vs-new on the ngm devbox (identical modules, constants,
 functions and library versions; phpt failure lists compared) before the forks were
