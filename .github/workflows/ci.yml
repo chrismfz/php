@@ -1,0 +1,50 @@
+name: ci
+
+# Cheap checks on every PR (and on main): the scripts parse and lint clean,
+# the tools compile, and every minor's patch series still applies to its
+# pristine, sha256-pinned php.net tarball with no rejects. No compile: a full
+# build stays a host job (devbox) until it is worth a build matrix here.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: bash -n
+        run: for f in *.sh; do bash -n "$f"; done
+      - name: shellcheck
+        run: shellcheck -S warning *.sh
+      - name: python tools compile
+        run: python3 -m py_compile tools/*.py
+
+  patches:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        minor: ["5.3", "5.6", "7.0", "7.1", "7.2", "7.3"]
+    name: patches (${{ matrix.minor }})
+    steps:
+      - uses: actions/checkout@v4
+      - name: fetch the pristine tarball and apply the series
+        env:
+          PHP_MINOR: ${{ matrix.minor }}
+          BUILD_ROOT: ${{ runner.temp }}/build
+        # The same functions (sha256 pin, series + patches-local, no-.rej gate)
+        # a real build runs, sourced from build.sh.
+        run: |
+          source ./build.sh
+          fetch_php_source
+          apply_patches

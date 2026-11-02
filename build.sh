@@ -281,6 +281,66 @@ install_deps() {
   fi
 }
 
+# ── Hardening flags ────────────────────────────────────────────────────────────
+# The standard distro set — what Fedora/RHEL (redhat-rpm-config) and Debian
+# (dpkg-buildflags hardening=+all) give their own PHP packages: stack protector,
+# stack-clash protection, CET on x86_64, _FORTIFY_SOURCE=2, full RELRO + BIND_NOW,
+# non-executable stack, and a PIE php/php-fpm (so ASLR covers the binary too).
+# None of them changes what PHP does; each turns a memory-corruption bug into a
+# crash instead of code execution. Each compiler flag is probed, so an older gcc
+# or another arch simply goes without the one it lacks (-fcf-protection is
+# x86-only). FORTIFY is 2, not 3: 3 (gcc 12+) also checks dynamic sizes, which
+# old PHP code with struct-hack trailing arrays could trip; that would be its own
+# tested change. It rides CFLAGS (with -O2), not CPPFLAGS: glibc warns about
+# FORTIFY without -O, and old autoconf preprocessor checks treat any stderr as a
+# failed check. verify_hardening() proves the result on the built binaries.
+HARDEN_CFLAGS=""
+HARDEN_LDFLAGS=""
+HARDEN_PIE=""
+
+cc_accepts() {
+  printf 'int main(void){return 0;}\n' | "${CC:-cc}" -Werror -O2 -fPIC "$@" -x c -o /dev/null - >/dev/null 2>&1
+}
+
+detect_hardening() {
+  local f
+  for f in -fstack-protector-strong -fstack-clash-protection -fcf-protection; do
+    if cc_accepts "$f"; then HARDEN_CFLAGS="${HARDEN_CFLAGS} ${f}"; fi
+  done
+  HARDEN_CFLAGS="${HARDEN_CFLAGS# } -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2"
+  HARDEN_LDFLAGS="-Wl,-z,relro -Wl,-z,now -Wl,-z,noexecstack"
+  cc_accepts $HARDEN_LDFLAGS || die "the linker refuses ${HARDEN_LDFLAGS}"
+  cc_accepts -pie && HARDEN_PIE="-pie"
+  log "hardening: ${HARDEN_CFLAGS} ${HARDEN_LDFLAGS} ${HARDEN_PIE}"
+}
+
+# verify_hardening proves the flags reached the binaries (a libtool or configure
+# that silently drops one would otherwise go unnoticed). Only after a build: a
+# RUNTIME_ONLY run may be looking at an older, pre-hardening binary.
+verify_hardening() {
+  # Capture each tool's output first: `nm -D | grep -q` under pipefail fails with
+  # SIGPIPE (rc 141) the moment grep stops reading, even on a match.
+  local bin elf_h elf_l elf_d dynsyms
+  for bin in "${PREFIX}/bin/php" "${PREFIX}/sbin/php-fpm"; do
+    elf_h="$(readelf -hW "$bin")"
+    elf_l="$(readelf -lW "$bin")"
+    elf_d="$(readelf -dW "$bin")"
+    dynsyms="$(nm -D "$bin")"
+    if [ -n "$HARDEN_PIE" ]; then
+      grep -Eq 'Type:[[:space:]]+DYN' <<<"$elf_h" || die "${bin} is not PIE."
+    fi
+    grep -q 'GNU_RELRO' <<<"$elf_l" || die "${bin} has no RELRO segment."
+    grep -Eq 'BIND_NOW|FLAGS.*NOW' <<<"$elf_d" || die "${bin} is not linked with -z now (full RELRO)."
+    if grep 'GNU_STACK' <<<"$elf_l" | grep -q 'RWE'; then die "${bin} has an executable stack."; fi
+    case " $HARDEN_CFLAGS " in
+      *" -fstack-protector-strong "*)
+        grep -q '__stack_chk_fail' <<<"$dynsyms" || die "${bin} has no stack protector." ;;
+    esac
+    grep -Eq '__[a-z0-9_]+_chk' <<<"$dynsyms" || die "${bin} has no _FORTIFY_SOURCE checks."
+  done
+  log "hardening verified: PIE=${HARDEN_PIE:-no}, full RELRO, NX stack, stack protector, FORTIFY_SOURCE=2"
+}
+
 build_openssl() {
   local tarball="${BUILD_ROOT}/openssl-${OPENSSL_VERSION}.tar.gz" libdir=""
   mkdir -p "$BUILD_ROOT"
@@ -311,7 +371,7 @@ build_openssl() {
     env -u PERL5OPT PERL5LIB="$openssl_perl5lib" ./config \
       --prefix="${OPENSSL_PREFIX}" \
       --openssldir="${OPENSSL_PREFIX}" \
-      shared zlib -fPIC
+      shared zlib -fPIC $HARDEN_CFLAGS $HARDEN_LDFLAGS
     env -u PERL5OPT PERL5LIB="$openssl_perl5lib" make -j"$JOBS"
     env -u PERL5OPT PERL5LIB="$openssl_perl5lib" make install_sw
   popd >/dev/null
@@ -411,7 +471,7 @@ build_curl() {
 
   pushd "${BUILD_ROOT}/curl-${CURL_VERSION}" >/dev/null
     log "building curl ${CURL_VERSION} with GnuTLS -> ${CURL_PREFIX}"
-    CFLAGS="-O2 -fPIC" ./configure \
+    CFLAGS="-O2 -fPIC ${HARDEN_CFLAGS}" LDFLAGS="${HARDEN_LDFLAGS}" ./configure \
       --prefix="${CURL_PREFIX}" \
       --enable-shared --disable-static \
       --with-gnutls --without-openssl \
@@ -444,8 +504,8 @@ build_libmcrypt() {
 
   pushd "${BUILD_ROOT}/libmcrypt-${MCRYPT_VERSION}" >/dev/null
     log "building libmcrypt ${MCRYPT_VERSION} -> ${MCRYPT_PREFIX}"
-    CFLAGS="-O2 -fPIC -fcommon -Wno-error=implicit-function-declaration -Wno-error=implicit-int" \
-    CPPFLAGS="-D_DEFAULT_SOURCE" \
+    CFLAGS="-O2 -fPIC ${HARDEN_CFLAGS} -fcommon -Wno-error=implicit-function-declaration -Wno-error=implicit-int" \
+    CPPFLAGS="-D_DEFAULT_SOURCE" LDFLAGS="${HARDEN_LDFLAGS}" \
       ./configure --prefix="${MCRYPT_PREFIX}" --disable-posix-threads
     make -j"$JOBS"
     make install
@@ -553,9 +613,9 @@ build_php() {
   export PATH="${CURL_PREFIX}/bin:${PATH}"
   export PKG_CONFIG_PATH="${openssl_libdir}/pkgconfig:${curl_libdir}/pkgconfig:${PKG_CONFIG_PATH:-}"
   export LD_LIBRARY_PATH="${openssl_libdir}:${curl_libdir}:${LD_LIBRARY_PATH:-}"
-  export CFLAGS="-O2 -fPIC -fcommon -Wno-error=incompatible-pointer-types -Wno-error=implicit-function-declaration -Wno-error=implicit-int -Wno-error=int-conversion ${CFLAGS:-}"
+  export CFLAGS="-O2 -fPIC ${HARDEN_CFLAGS} -fcommon -Wno-error=incompatible-pointer-types -Wno-error=implicit-function-declaration -Wno-error=implicit-int -Wno-error=int-conversion ${CFLAGS:-}"
   export CPPFLAGS="-D_DEFAULT_SOURCE -I${OPENSSL_PREFIX}/include -I${CURL_PREFIX}/include ${CPPFLAGS:-}"
-  export LDFLAGS="-L${openssl_libdir} -L${curl_libdir} -Wl,-rpath,${openssl_libdir} -Wl,-rpath,${curl_libdir} ${LDFLAGS:-}"
+  export LDFLAGS="${HARDEN_LDFLAGS} ${HARDEN_PIE} -L${openssl_libdir} -L${curl_libdir} -Wl,-rpath,${openssl_libdir} -Wl,-rpath,${curl_libdir} ${LDFLAGS:-}"
 
   if [ "$USE_MCRYPT" = "1" ]; then
     mcrypt_libdir="$(find_libdir "$MCRYPT_PREFIX" 'libmcrypt.so*')" || die "private libmcrypt library directory not found."
@@ -906,6 +966,7 @@ main() {
   fi
 
   install_deps
+  detect_hardening
   build_openssl
   provision_openssl_runtime_files
   build_curl
@@ -917,10 +978,15 @@ main() {
   fetch_php_source
   apply_patches
   build_php
+  verify_hardening
   build_snuffleupagus
   install_runtime_extensions
   verify
   run_regression_tests
 }
 
-main "$@"
+# Run only when executed, not when sourced: CI sources this file to call
+# fetch_php_source + apply_patches on their own (the same gate a real build uses).
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+  main "$@"
+fi

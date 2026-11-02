@@ -58,6 +58,12 @@ Snuffleupagus, the CloudLinux SRPM per minor); the weekly `check-deps` Action op
 `deps/auto-update` PR with `--bump`'s diff. Review it like any refresh: validate the
 apply, host-build, then merge. Never make a build fetch "latest" instead.
 
+Hardening flags live in one place, `detect_hardening()` (probed per compiler), and
+`verify_hardening()` proves them on the built binaries. Keep both in step. Don't
+raise `_FORTIFY_SOURCE` to 3 (or add any check that aborts at runtime) casually:
+those can abort on old PHP code that is merely sloppy (struct-hack arrays), so each
+is its own change with the full phpt suite compared before/after.
+
 ## OpenSSL maintenance
 
 - Build against the private **OpenSSL 3.5 LTS** under `/opt/ngm/php/openssl-3.5`,
@@ -77,6 +83,13 @@ GnuTLS curl; the crypto operations the OpenSSL-3 patch touches; X509/CSR/PKCS#12
 OpenSSL configuration handling changes; and `php-fpm -t`. `test-openssl35.sh`,
 `test-openssl35-legacy.sh` and `test-openssl35-phar.sh` are the reference suites and
 run at the end of `build.sh` for every minor.
+
+`.github/workflows/ci.yml` runs on every PR: `bash -n` + `shellcheck -S warning` on
+the scripts, the Python tools compile, and for each minor the pristine tarball is
+fetched (sha256 pin) and the series + `patches-local` applied through `build.sh`'s
+own `fetch_php_source`/`apply_patches` (sourced; `main` runs only when executed).
+It does not compile. A green CI means "the patches still apply", never "it
+builds": a host build is still the gate for anything that touches the compile.
 
 When a change could alter runtime behaviour (a new base, a big refresh, a new
 compat patch), build old and new side by side in scratch prefixes (`NGM_ROOT=` and
