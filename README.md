@@ -1,4 +1,4 @@
-# Legacy PHP for NGM — security-patched, source-built
+# Legacy PHP for NGM security-patched, source-built
 
 > **This repo is `chrismfz/php`** (renamed from `chrismfz/php7`; GitHub redirects
 > the old url), the one home for every source-built legacy PHP: **5.3**, **5.6** and
