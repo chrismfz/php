@@ -38,6 +38,16 @@ collide with the host:
   mysqlnd). Snuffleupagus needs 7.0+, so 5.x refuses `ENABLE_SNUFFLEUPAGUS=1`.
   **5.3** has no Zend OPcache (bundled from 5.5 on), so none is built or loaded.
 
+Everything is compiled with the **distro hardening flags** — the set Fedora/RHEL and
+Debian give their own PHP packages: `-fstack-protector-strong`,
+`-fstack-clash-protection`, `-fcf-protection` (x86), `_FORTIFY_SOURCE=2`, full RELRO
+(`-z relro -z now`), a non-executable stack and a **PIE** `php`/`php-fpm`. They change
+nothing PHP does; a memory-corruption bug becomes a crash instead of code execution.
+Each compiler flag is probed (an older gcc or another arch goes without the one it
+lacks) and the build fails if the result is not PIE + full RELRO + stack protector +
+FORTIFY. The shared OpenSSL/curl/libmcrypt pick the flags up on their next rebuild
+(`FORCE_DEPS=1`, or a pin bump).
+
 NGM auto-discovers the result at `/opt/ngm/php/<minor>/sbin/php-fpm`; nothing else
 on the host is touched.
 

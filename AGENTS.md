@@ -58,6 +58,12 @@ Snuffleupagus, the CloudLinux SRPM per minor); the weekly `check-deps` Action op
 `deps/auto-update` PR with `--bump`'s diff. Review it like any refresh: validate the
 apply, host-build, then merge. Never make a build fetch "latest" instead.
 
+Hardening flags live in one place, `detect_hardening()` (probed per compiler), and
+`verify_hardening()` proves them on the built binaries. Keep both in step. Don't
+raise `_FORTIFY_SOURCE` to 3 (or add any check that aborts at runtime) casually:
+those can abort on old PHP code that is merely sloppy (struct-hack arrays), so each
+is its own change with the full phpt suite compared before/after.
+
 ## OpenSSL maintenance
 
 - Build against the private **OpenSSL 3.5 LTS** under `/opt/ngm/php/openssl-3.5`,
