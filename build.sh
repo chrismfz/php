@@ -948,6 +948,37 @@ run_regression_tests() {
   log "PHP ${PHP_SERIES} production regression suites passed"
 }
 
+# write_build_stamp records what this build was made from, for ngm's "update
+# available" check: ${PREFIX}/ngm-build, one key=value per line. `inputs` are the
+# repo paths that shape THIS minor's binaries; `inputs_tree` is the sha256 of
+# `git ls-tree -r HEAD -- <inputs>`. ngm recomputes the same hash on the remote
+# branch with the stamp's own input list, so what counts is decided here only.
+# A build from a non-git copy has no inputs_tree (ngm then says "unknown").
+write_build_stamp() {
+  local stamp="${PREFIX}/ngm-build" commit="" tree="" cl="" ioncube_rel="ioncube/ioncube_loader_lin_${PHP_SERIES}.so"
+  local -a inputs=(build.sh "patches/${PHP_MINOR_NODOT}" "patches-local/${PHP_MINOR_NODOT}")
+  [ -e "${REPO_DIR}/${ioncube_rel}" ] && inputs+=("$ioncube_rel")
+  if git -C "$REPO_DIR" rev-parse --verify -q HEAD >/dev/null 2>&1; then
+    commit="$(git -C "$REPO_DIR" rev-parse HEAD)"
+    tree="$(git -C "$REPO_DIR" ls-tree -r HEAD -- "${inputs[@]}" | sha256sum | awk '{print $1}')"
+  fi
+  [ -r "${REPO_DIR}/patches/${PHP_MINOR_NODOT}/SOURCE" ] && \
+    cl="$(awk -F'\t' '$1=="srpm_release"{print $2}' "${REPO_DIR}/patches/${PHP_MINOR_NODOT}/SOURCE")"
+  cat > "${stamp}.tmp" <<EOF
+builder_commit=${commit}
+inputs=${inputs[*]}
+inputs_tree=${tree}
+php_release=${PHP_RELEASE}
+cloudlinux=${cl}
+openssl=${OPENSSL_VERSION}
+curl=${CURL_VERSION}
+built_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+EOF
+  chmod 644 "${stamp}.tmp"
+  mv -f "${stamp}.tmp" "$stamp"
+  log "build stamp: ${stamp} (builder ${commit:0:12}${tree:+, inputs ${tree:0:12}})"
+}
+
 main() {
   need_root
   mkdir -p "$BUILD_ROOT" "$NGM_ROOT"
@@ -983,6 +1014,7 @@ main() {
   install_runtime_extensions
   verify
   run_regression_tests
+  write_build_stamp
 }
 
 # Run only when executed, not when sourced: CI sources this file to call

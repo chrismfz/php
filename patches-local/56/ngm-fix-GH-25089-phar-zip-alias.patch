@@ -1,0 +1,81 @@
+From: NGM <ngm@localhost>
+Subject: [PATCH] ngm-fix: GH-25089 heap over-read via crafted alias size in zip-based phar
+
+What: phar_parse_zipfile() set the phar's alias length from the size the ZIP
+headers CLAIM for .phar/alias.txt, before reading it. The alias buffer only
+holds what was actually read (decompressed), so a crafted archive claiming a
+larger size made phar_validate_alias() and Phar::getAlias() read past the
+heap buffer. Set the length after the read, from the bytes actually read.
+
+Why ours: upstream fixed it on 2026-11-01 (php-src 61edcf9b, PHP-8.4 and up,
+not yet released, no CVE). Every legacy minor has the same code, and it is
+reachable from outside: opening an uploaded file as phar:// / PharData is
+enough. A one-line move, same as upstream; test is upstream's gh25089.phpt
+with --EXTENSIONS-- turned into --SKIPIF-- for the old run-tests.
+
+Behaviour change: none for valid archives; a crafted one now gets its real
+alias instead of reading past the buffer.
+
+Delete when: the CloudLinux series for this minor carries the fix (an
+apply-time reject on this hunk says so).
+---
+--- a/ext/phar/zip.c
++++ b/ext/phar/zip.c
+@@ -594,7 +594,6 @@
+ 			fp->readpos = 0;
+ 			/* the above lines should be for php < 5.2.6 after 5.3 filters are fixed */
+ 
+-			mydata->alias_len = entry.uncompressed_filesize;
+ 
+ 			if (entry.flags & PHAR_ENT_COMPRESSED_GZ) {
+ 				filter = php_stream_filter_create("zlib.inflate", NULL, php_stream_is_persistent(fp) TSRMLS_CC);
+@@ -638,6 +637,9 @@
+ 				}
+ 			}
+ 
++			/* Only now: the size the headers claim may exceed what was read. */
++			mydata->alias_len = entry.uncompressed_filesize;
++
+ 			/* return to central directory parsing */
+ 			php_stream_seek(fp, saveloc, SEEK_SET);
+ 		}
+--- /dev/null
++++ b/ext/phar/tests/zip/gh25089.phpt
+@@ -0,0 +1,37 @@
++--TEST--
++GH-25089 (Heap buffer over-read via crafted alias size in zip-based phar)
++--SKIPIF--
++<?php
++if (!extension_loaded("phar")) die("skip phar extension not loaded");
++if (!extension_loaded("zlib")) die("skip zlib extension not loaded");
++?>
++--FILE--
++<?php
++$name = '.phar/alias.txt';
++$alias = 'ABCD';
++$data = gzdeflate($alias);
++$crc = crc32($alias);
++$claimed = 0x1000;
++
++$local = "PK\x03\x04"
++    . pack('vvvvvVVVvv', 20, 0, 8, 0, 0,
++        $crc, strlen($data), $claimed, strlen($name), 0)
++    . $name . $data;
++$central = "PK\x01\x02"
++    . pack('vvvvvvVVVvvvvvVV', 20, 20, 0, 8, 0, 0,
++        $crc, strlen($data), $claimed, strlen($name), 0, 0, 0, 0, 0, 0)
++    . $name;
++$end = "PK\x05\x06"
++    . pack('vvvvVVv', 0, 0, 1, 1, strlen($central), strlen($local), 0);
++
++file_put_contents(dirname(__FILE__) . '/gh25089.zip', $local . $central . $end);
++
++$phar = new PharData(dirname(__FILE__) . '/gh25089.zip');
++var_dump($phar->getAlias());
++?>
++--CLEAN--
++<?php
++@unlink(dirname(__FILE__) . '/gh25089.zip');
++?>
++--EXPECT--
++string(4) "ABCD"
