@@ -73,9 +73,17 @@ apply, host-build, then merge. Never make a build fetch "latest" instead.
 Do not declare a port complete because it compiles. At minimum verify: successful
 build + install; expected PHP and OpenSSL versions; dynamic library linkage (private
 libssl/libcrypto/libcurl, no 1.1 ABI); HTTPS/TLS via both the OpenSSL stream and the
-GnuTLS curl; the crypto operations the OpenSSL-3 patch touches; and `php-fpm -t`. The
-repo's `test-openssl35.sh` is the reference regression suite and runs at the end of
-`build.sh`.
+GnuTLS curl; the crypto operations the OpenSSL-3 patch touches; X509/CSR/PKCS#12 when
+OpenSSL configuration handling changes; and `php-fpm -t`. `test-openssl35.sh`,
+`test-openssl35-legacy.sh` and `test-openssl35-phar.sh` are the reference suites and
+run at the end of `build.sh` for every minor.
+
+When a change could alter runtime behaviour (a new base, a big refresh, a new
+compat patch), build old and new side by side in scratch prefixes (`NGM_ROOT=` and
+`BUILD_ROOT=` keep the live `/opt/ngm/php` untouched) and compare: `php -m`, defined
+constants and internal functions, library versions, then PHP's own phpt suite by
+failure list. A failure only the new build has is either a test-file artifact (rerun
+it with the new binary against the old tree's `.phpt`) or a regression to fix.
 
 ## The bigger picture
 

@@ -194,6 +194,32 @@ allocator overflow) now ends the worker with `_exit(1)` instead of a catchable
 fatal error, so shutdown functions don't run and the client sees a 502; on 7.x
 `session.upload_progress` is also disabled.
 
+## History
+
+This repo started as `chrismfz/php7` (7.0–7.3 only) and was renamed `chrismfz/php`
+on 2026-10-23. 5.6 (2026-10-23) and 5.3 (2026-11-02) moved in from their own source
+forks, which are archived read-only; their git history is where to look for the
+reasoning behind older decisions:
+
+- **`chrismfz/php56`** — PHP 5.6.40 from the
+  [`boogermann/php5`](https://github.com/boogermann/php5) fork, with the CloudLinux
+  series on top (40 excludes, because boogermann already carried many fixes in
+  another shape). Its in-tree OpenSSL port (`49bff4ec`, on the boogermann base) is
+  replaced here by CloudLinux's own `php-5.6.40-openssl11.patch` +
+  `php-5.6.40-fix-for-openssl-3.0.x.patch`. Its `CVE-2019-11048-rfc1867-size_t.patch`
+  existed only because boogermann had half-fixed that overflow (`int` → `unsigned
+  int`); on the pristine base CloudLinux's full `size_t` fix applies as shipped.
+- **`chrismfz/php53`** — a raw PHP 5.3.29 git tree, so it needed a private
+  autoconf 2.59 / bison 2.6.4 / re2c toolchain to generate `configure` and the
+  parsers; the tarball ships them. Its in-tree OpenSSL port (`2cfb431` for 1.1,
+  `44f26af` for 3.5) is replaced by CloudLinux's `php-5.3.29-openssl11.patch` plus
+  our `patches-local/53/ngm-compat-openssl3.patch` (the SSLv23-padding and SSLv3
+  guards; the `OBJ_create` duplicate-OID fix is already in CloudLinux's patch).
+
+Both moves were validated old-vs-new on the ngm devbox (identical modules, constants,
+functions and library versions; phpt failure lists compared) before the forks were
+retired.
+
 ## Licence
 
 PHP is under the **PHP License 3.01**; these patches are derivatives of the PHP
