@@ -318,19 +318,25 @@ detect_hardening() {
 # that silently drops one would otherwise go unnoticed). Only after a build: a
 # RUNTIME_ONLY run may be looking at an older, pre-hardening binary.
 verify_hardening() {
-  local bin
+  # Capture each tool's output first: `nm -D | grep -q` under pipefail fails with
+  # SIGPIPE (rc 141) the moment grep stops reading, even on a match.
+  local bin elf_h elf_l elf_d dynsyms
   for bin in "${PREFIX}/bin/php" "${PREFIX}/sbin/php-fpm"; do
+    elf_h="$(readelf -hW "$bin")"
+    elf_l="$(readelf -lW "$bin")"
+    elf_d="$(readelf -dW "$bin")"
+    dynsyms="$(nm -D "$bin")"
     if [ -n "$HARDEN_PIE" ]; then
-      readelf -hW "$bin" | grep -Eq 'Type:[[:space:]]+DYN' || die "${bin} is not PIE."
+      grep -Eq 'Type:[[:space:]]+DYN' <<<"$elf_h" || die "${bin} is not PIE."
     fi
-    readelf -lW "$bin" | grep -q 'GNU_RELRO' || die "${bin} has no RELRO segment."
-    readelf -dW "$bin" | grep -Eq 'BIND_NOW|FLAGS.*NOW' || die "${bin} is not linked with -z now (full RELRO)."
-    readelf -lW "$bin" | grep 'GNU_STACK' | grep -q 'RWE' && die "${bin} has an executable stack."
+    grep -q 'GNU_RELRO' <<<"$elf_l" || die "${bin} has no RELRO segment."
+    grep -Eq 'BIND_NOW|FLAGS.*NOW' <<<"$elf_d" || die "${bin} is not linked with -z now (full RELRO)."
+    if grep 'GNU_STACK' <<<"$elf_l" | grep -q 'RWE'; then die "${bin} has an executable stack."; fi
     case " $HARDEN_CFLAGS " in
       *" -fstack-protector-strong "*)
-        nm -D "$bin" | grep -q '__stack_chk_fail' || die "${bin} has no stack protector." ;;
+        grep -q '__stack_chk_fail' <<<"$dynsyms" || die "${bin} has no stack protector." ;;
     esac
-    nm -D "$bin" | grep -Eq '__[a-z0-9_]+_chk' || die "${bin} has no _FORTIFY_SOURCE checks."
+    grep -Eq '__[a-z0-9_]+_chk' <<<"$dynsyms" || die "${bin} has no _FORTIFY_SOURCE checks."
   done
   log "hardening verified: PIE=${HARDEN_PIE:-no}, full RELRO, NX stack, stack protector, FORTIFY_SOURCE=2"
 }
