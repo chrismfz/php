@@ -1,0 +1,31 @@
+From: NGM <ngm@localhost>
+Subject: [PATCH] ngm-compat: build ext/openssl against OpenSSL 3 (RSA_SSLV23_PADDING)
+
+What: guard the OPENSSL_SSLV23_PADDING constant registration with
+#ifdef RSA_SSLV23_PADDING, which OpenSSL 3.0 removed. Without it
+ext/openssl does not compile against our private OpenSSL 3.5.
+
+Why ours: CloudLinux ships this exact hunk for 5.6/7.x as
+php-<ver>-fix-for-openssl-3.0.x.patch, but builds ea-php53 only on EL8
+(OpenSSL 1.1), so the 5.3 series has no OpenSSL-3 follow-up to its
+php-5.3.29-openssl11.patch (which we force-keep). The hunk is
+byte-identical to CloudLinux's 5.6 one.
+
+Behaviour change: on OpenSSL 3 the PHP constant OPENSSL_SSLV23_PADDING is
+not defined (the padding mode no longer exists). Same as 5.6/7.x here.
+
+Delete when: CloudLinux ships an OpenSSL-3 follow-up for ea-php53, or 5.3
+is retired.
+---
+--- a/ext/openssl/openssl.c
++++ b/ext/openssl/openssl.c
+@@ -1180,7 +1180,9 @@
+ 	REGISTER_LONG_CONSTANT("PKCS7_NOSIGS", PKCS7_NOSIGS, CONST_CS|CONST_PERSISTENT);
+ 
+ 	REGISTER_LONG_CONSTANT("OPENSSL_PKCS1_PADDING", RSA_PKCS1_PADDING, CONST_CS|CONST_PERSISTENT);
++#ifdef RSA_SSLV23_PADDING
+ 	REGISTER_LONG_CONSTANT("OPENSSL_SSLV23_PADDING", RSA_SSLV23_PADDING, CONST_CS|CONST_PERSISTENT);
++#endif
+ 	REGISTER_LONG_CONSTANT("OPENSSL_NO_PADDING", RSA_NO_PADDING, CONST_CS|CONST_PERSISTENT);
+ 	REGISTER_LONG_CONSTANT("OPENSSL_PKCS1_OAEP_PADDING", RSA_PKCS1_OAEP_PADDING, CONST_CS|CONST_PERSISTENT);
+ 

@@ -2,7 +2,7 @@
 #
 # test-openssl35-legacy.sh — the OpenSSL 3.5 legacy provider (MD4, RC4, RC2, DES,
 # 3DES, openssl_seal default RC4, legacy PKCS#12) through PHP. Old customer code
-# still uses these; version-agnostic (5.6 / 7.x). From the former chrismfz/php56.
+# still uses these; version-agnostic (5.3 / 5.6 / 7.x). From the former chrismfz/php56.
 #
 #   PHP_PREFIX=/opt/ngm/php/5.6 ./test-openssl35-legacy.sh
 #
