@@ -985,4 +985,8 @@ main() {
   run_regression_tests
 }
 
-main "$@"
+# Run only when executed, not when sourced: CI sources this file to call
+# fetch_php_source + apply_patches on their own (the same gate a real build uses).
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+  main "$@"
+fi

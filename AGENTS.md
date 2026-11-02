@@ -84,6 +84,13 @@ OpenSSL configuration handling changes; and `php-fpm -t`. `test-openssl35.sh`,
 `test-openssl35-legacy.sh` and `test-openssl35-phar.sh` are the reference suites and
 run at the end of `build.sh` for every minor.
 
+`.github/workflows/ci.yml` runs on every PR: `bash -n` + `shellcheck -S warning` on
+the scripts, the Python tools compile, and for each minor the pristine tarball is
+fetched (sha256 pin) and the series + `patches-local` applied through `build.sh`'s
+own `fetch_php_source`/`apply_patches` (sourced; `main` runs only when executed).
+It does not compile. A green CI means "the patches still apply", never "it
+builds": a host build is still the gate for anything that touches the compile.
+
 When a change could alter runtime behaviour (a new base, a big refresh, a new
 compat patch), build old and new side by side in scratch prefixes (`NGM_ROOT=` and
 `BUILD_ROOT=` keep the live `/opt/ngm/php` untouched) and compare: `php -m`, defined
