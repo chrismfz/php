@@ -59,7 +59,14 @@ Snuffleupagus, the CloudLinux SRPM per minor); the weekly `check-deps` Action op
 apply, host-build, then merge. Never make a build fetch "latest" instead.
 
 Hardening flags live in one place, `detect_hardening()` (probed per compiler), and
-`verify_hardening()` proves them on the built binaries. Keep both in step. Don't
+`verify_hardening()` proves them on the built binaries. Keep both in step. 
+
+A successful build ends with `write_build_stamp()`: `/opt/ngm/php/<minor>/ngm-build`
+(builder commit, the input paths that shape this minor, the sha256 of
+`git ls-tree -r HEAD -- <inputs>`, PHP/CloudLinux/OpenSSL/curl versions). ngm's
+"update available" check recomputes that hash on the remote branch using the
+stamp's own `inputs`, so if a new file starts shaping a minor's binaries, add it
+to the `inputs` list there, nowhere else. A docs-only commit never flags an update. Don't
 raise `_FORTIFY_SOURCE` to 3 (or add any check that aborts at runtime) casually:
 those can abort on old PHP code that is merely sloppy (struct-hack arrays), so each
 is its own change with the full phpt suite compared before/after.
