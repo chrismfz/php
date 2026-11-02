@@ -28,8 +28,8 @@ Checked, each only where this repo pins it:
 Where upstream publishes no sha256 for the exact file we build (curl's .tar.xz,
 GitHub tag archives) the bump downloads it once and records its digest — the
 same TLS trust the build itself has; the pin then guards every later build.
-Stdlib only (+ the git CLI for tag listing). The same file ships in php53, php56
-and php; a check whose pin a repo doesn't carry is skipped.
+Stdlib only (+ the git CLI for tag listing). A check whose pin build.sh doesn't
+carry is skipped.
 """
 import argparse, glob, hashlib, os, re, subprocess, sys, urllib.request
 
@@ -37,7 +37,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def _default_build_sh():
-    """The repo's build script: build.sh (chrismfz/php) or build-php<NN>.sh (php53/php56)."""
+    """The repo's build script: build.sh (a build-php<NN>.sh is still found, for old checkouts)."""
     cand = os.path.join(ROOT, "build.sh")
     if os.path.exists(cand):
         return cand
@@ -108,7 +108,7 @@ def check_openssl(txt, line):
     if not found:
         return Result("openssl", pinned, error=f"no openssl-{line}.x on {OPENSSL_INDEX}"), txt
     r = Result("openssl", pinned, found[-1],
-               note="shared /opt/ngm/php/openssl-3.5 prefix: bump php53, php56 and php together")
+               note="shared /opt/ngm/php/openssl-3.5 prefix: host-build one minor before merging")
     if r.behind and ARGS.bump:
         sha = _get(f"{OPENSSL_INDEX}openssl-{r.latest}.tar.gz.sha256").decode().split()[0].strip()
         txt = set_pin(txt, "OPENSSL_VERSION", r.latest)
