@@ -7,18 +7,26 @@ source of backports (README "Plan B"); tools/check-deps.py watches it. This
 tool answers the follow-up question objectively, without trusting names: it
 builds this repo's patched tree for a minor (pristine tarball + series +
 patches-local, through build.sh's own functions), takes every ELTS patch that
-names a CVE our series never mentions, drops its tests, and dry-runs it:
+names a CVE our series never mentions (with --all: every ELTS patch, since our
+series naming a CVE does not mean it carries every upstream commit of it), drops
+its tests, and dry-runs it:
 
-    PRESENT    applies in REVERSE: the fix is already in our tree
-    MISSING    applies forward cleanly: we lack it, and it would go in as is
+    PRESENT    applies in REVERSE, or most of the lines it adds are already in
+               the files it touches: the fix is in our tree
+    MISSING    applies forward cleanly and its added lines are not there yet:
+               we lack it, and it would go in as is
     LOOK       neither: the code differs (fixed another way, partly, or the
-               patch needs adapting); read it
+               patch needs adapting); read it, and port it with fuzz + review
     tests-only nothing but tests once tests are dropped
+
+The forward check never uses patch -N: -N silently skips hunks that look
+already applied and still exits 0, which would report an applied fix as MISSING.
 
     ./tools/elts-audit.py --minor 73               # 7.3 against ELTS php7.3
     ./tools/elts-audit.py --minor 72 --from 73     # 7.2 tree vs ELTS php7.3
     ./tools/elts-audit.py --minor 53 --from 56     # 5.3 tree vs ELTS php5 (5.6)
     ./tools/elts-audit.py --minor 73 --tree DIR    # reuse an already patched tree
+    ./tools/elts-audit.py --minor 73 --all         # also CVEs our series names
 
 Read-only: it prints a table and touches nothing in the repo. Adoption is a
 separate, reviewed step. Needs network (php.net tarball, deb.freexian.com) and
@@ -67,11 +75,30 @@ def strip_tests(txt):
     return "".join(out)
 
 
+def added_lines_present(pf, tree):
+    """Share of the (non-trivial) lines a patch adds that its target files already contain."""
+    tot = found = 0
+    for block in re.split(r"(?m)^(?=diff --git |Index: |--- a/)", open(pf, encoding="utf-8").read()):
+        m = re.search(r"(?m)^\+\+\+ b/(\S+)", block)
+        if not m:
+            continue
+        p = os.path.join(tree, m.group(1))
+        src = open(p, encoding="utf-8", errors="replace").read() if os.path.exists(p) else ""
+        for ln in re.findall(r"(?m)^\+(?!\+\+)(.*)$", block):
+            t = ln.strip()
+            if len(t) < 10 or t.startswith(("/*", "*", "//")):
+                continue
+            tot += 1
+            found += t in src
+    return found / tot if tot else 0.0
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--minor", required=True, help="our minor whose tree is checked (53, 56, 70 … 73)")
     ap.add_argument("--from", dest="src", help="minor whose elts/<nn>/ELTS names the ELTS package (default: --minor)")
     ap.add_argument("--tree", help="an already patched tree to check instead of building one")
+    ap.add_argument("--all", action="store_true", help="also check ELTS patches whose CVE our series already names")
     args = ap.parse_args()
     src = args.src or args.minor
     elts = os.path.join(ROOT, "elts", src, "ELTS")
@@ -91,7 +118,7 @@ def main():
     counts = {}
     for name in series:
         cves = {c.upper() for c in re.findall(r"CVE-\d{4}-\d+", name, re.I)}
-        if not cves or cves <= ours:
+        if not cves or (cves <= ours and not args.all):
             continue
         raw = tf.extractfile("debian/patches/" + name).read().decode("utf-8", "replace")
         m = re.search(r"(?mi)^Subject:\s*(?:\[PATCH[^]]*\]\s*)?(.*)", raw)
@@ -107,7 +134,13 @@ def main():
                 return subprocess.run(["patch", "-p1", "--dry-run", "-s", "-f", *extra, "-i", pf],
                                       cwd=tree, capture_output=True, text=True).returncode == 0
 
-            state = "PRESENT" if dry("-R") else "MISSING" if dry("-N") else "LOOK"
+            have = added_lines_present(pf, tree)
+            if dry("-R") or have >= 0.8:
+                state = "PRESENT"
+            elif dry() and have < 0.5:
+                state = "MISSING"
+            else:
+                state = "LOOK"
         counts[state] = counts.get(state, 0) + 1
         print(f"{state:10} {name:50} {subj}")
     print("# " + ", ".join(f"{k} {v}" for k, v in sorted(counts.items())) if counts else "# nothing to check: every ELTS CVE is named in our series")
