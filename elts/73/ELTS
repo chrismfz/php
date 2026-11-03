@@ -1,0 +1,4 @@
+package	php7.3
+upstream	7.3.
+version	7.3.31-1~deb10u16
+pool_url	https://deb.freexian.com/extended-lts/pool/main/p/php7.3/

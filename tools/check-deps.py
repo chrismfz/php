@@ -19,6 +19,12 @@ Checked, each only where this repo pins it:
     snuffleupagus  highest vX.Y.Z tag, sha256 of the GitHub tag archive
     cloudlinux     newest ea-phpNN SRPM release per patches/[<nn>/]SOURCE;
                    --bump re-runs tools/import-cloudlinux-patches.py on it
+    elts           WATCH ONLY: newest Freexian ELTS (Debian extended LTS) upload
+                   per elts/<nn>/ELTS, the second, CloudLinux-independent
+                   source of backports (docs: README "Plan B"). Behind = they
+                   patched something since we last looked; the report lists the
+                   new debian/patches names. --bump only records what was seen
+                   (elts/<nn>/ELTS + series); nothing is imported or built from it.
 
     ./tools/check-deps.py                  # report (exit 0 current, 3 behind, 2 error)
     ./tools/check-deps.py --bump           # also rewrite pins / re-import series
@@ -31,7 +37,7 @@ same TLS trust the build itself has; the pin then guards every later build.
 Stdlib only (+ the git CLI for tag listing). A check whose pin build.sh doesn't
 carry is skipped.
 """
-import argparse, glob, hashlib, os, re, subprocess, sys, urllib.request
+import argparse, glob, hashlib, io, os, re, subprocess, sys, tarfile, urllib.parse, urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -51,7 +57,7 @@ OPENSSL_INDEX = "https://www.openssl.org/source/"
 CURL_INFO = "https://curl.se/info"
 CURL_DOWNLOAD = "https://curl.se/download/"
 SNUFFLEUPAGUS_REPO = "https://github.com/jvoisin/snuffleupagus"
-CHECKS = ("openssl", "curl", "snuffleupagus", "cloudlinux")
+CHECKS = ("openssl", "curl", "snuffleupagus", "cloudlinux", "elts")
 
 
 def _get(url, timeout=60):
@@ -217,6 +223,76 @@ def check_cloudlinux():
     return results
 
 
+# ── Freexian ELTS (watch only) ────────────────────────────────────────────────
+
+def _natkey(v):
+    """Natural sort for Debian versions of ONE upstream (…deb10u9 < …deb10u16)."""
+    return [int(t) if t.isdigit() else t for t in re.split(r"(\d+)", v)]
+
+
+def _read_tsv(path):
+    return dict(ln.rstrip("\n").split("\t", 1) for ln in open(path, encoding="utf-8") if "\t" in ln)
+
+
+def _elts_series(pool, pkg, version):
+    """debian/patches/series of one ELTS upload, read from its debian tarball in memory."""
+    for ext in ("xz", "gz"):
+        name = f"{pkg}_{urllib.parse.quote(version)}.debian.tar.{ext}"
+        try:
+            data = _get(pool + name, timeout=180)
+        except Exception:
+            continue
+        with tarfile.open(fileobj=io.BytesIO(data), mode="r:*") as tf:
+            member = tf.extractfile("debian/patches/series")
+            lines = member.read().decode("utf-8", "replace").splitlines() if member else []
+        return [ln.split()[0] for ln in lines if ln.strip() and not ln.lstrip().startswith("#")]
+    raise RuntimeError(f"no debian tarball for {pkg} {version} in {pool}")
+
+
+def check_elts():
+    results = []
+    for src in sorted(glob.glob(os.path.join(ROOT, "elts", "*", "ELTS"))):
+        minor = os.path.basename(os.path.dirname(src))
+        f = _read_tsv(src)
+        pkg, seen, pool, upstream = f.get("package", ""), f.get("version", ""), f.get("pool_url", ""), f.get("upstream", "")
+        label = f"elts {minor}"
+        if not (pkg and seen and pool and upstream):
+            results.append(Result(label, seen or "?", error=f"incomplete {os.path.relpath(src, ROOT)}"))
+            continue
+        try:
+            html = _get(pool, timeout=120).decode("utf-8", "replace")
+        except Exception as e:
+            results.append(Result(label, seen, error=f"listing {pool}: {e}"))
+            continue
+        cands = {urllib.parse.unquote(m) for m in re.findall(rf'{re.escape(pkg)}_([^"<>\s/]+)\.dsc', html)}
+        cands = sorted((c for c in cands if c.startswith(upstream)), key=_natkey)
+        if not cands:
+            results.append(Result(label, seen, error=f"no {pkg} {upstream}* upload in {pool}"))
+            continue
+        latest = cands[-1]
+        r = Result(label, seen, latest if _natkey(latest) > _natkey(seen) else seen)
+        if r.behind:
+            series_path = os.path.join(os.path.dirname(src), "series")
+            old = set(open(series_path, encoding="utf-8").read().split()) if os.path.exists(series_path) else set()
+            try:
+                new = _elts_series(pool, pkg, latest)
+                added = [p for p in new if p not in old]
+                r.note = (f"{pkg} has new backports since we looked; compare with patches/{minor}/ "
+                          f"(CloudLinux may not carry them yet). New in debian/patches: "
+                          + (", ".join(added) if added else "none by name (a changed patch?)")
+                          + f". Which of them our tree lacks: tools/elts-audit.py --minor {minor}")
+                if ARGS.bump:
+                    open(series_path, "w", encoding="utf-8").write("\n".join(new) + "\n")
+            except Exception as e:
+                r.note = f"{pkg} has a newer upload; could not read its patch list ({e})"
+            if ARGS.bump:
+                txt = open(src, encoding="utf-8").read()
+                open(src, "w", encoding="utf-8").write(re.sub(r"(?m)^version\t.*$", "version\t" + latest, txt))
+                r.bumped = True
+        results.append(r)
+    return results
+
+
 # ── report ────────────────────────────────────────────────────────────────────
 
 def markdown(results, build_sh):
@@ -262,6 +338,8 @@ def main():
         open(ARGS.build_sh, "w", encoding="utf-8").write(txt)
     if "cloudlinux" in only:
         results += check_cloudlinux()
+    if "elts" in only:
+        results += check_elts()
 
     for r in results:
         if r.error:

@@ -91,6 +91,13 @@ OpenSSL configuration handling changes; and `php-fpm -t`. `test-openssl35.sh`,
 `test-openssl35-legacy.sh` and `test-openssl35-phar.sh` are the reference suites and
 run at the end of `build.sh` for every minor.
 
+Backport sources: CloudLinux EA4 is the imported series (`patches/<nn>/`,
+machine-owned); Freexian ELTS is watched (`elts/{56,70,73}/ELTS` +
+`series`, its own directory because the importer rmtree()s `patches/<nn>/`; check `elts` in `check-deps.py`) and audited with
+`tools/elts-audit.py` (PRESENT/MISSING/LOOK by dry-run against our patched tree,
+never by name). A fix adopted from ELTS goes to `patches-local/<nn>/` with the usual
+header naming the ELTS patch it came from. README "Plan B" is the runbook.
+
 `.github/workflows/ci.yml` runs on every PR: `bash -n` + `shellcheck -S warning` on
 the scripts, the Python tools compile, and for each minor the pristine tarball is
 fetched (sha256 pin) and the series + `patches-local` applied through `build.sh`'s
