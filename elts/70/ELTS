@@ -1,0 +1,4 @@
+package	php7.0
+upstream	7.0.
+version	7.0.33-0+deb9u26
+pool_url	https://deb.freexian.com/extended-lts/pool/main/p/php7.0/

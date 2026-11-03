@@ -143,7 +143,43 @@ upstream: the OpenSSL 3.5 LTS, curl, Snuffleupagus and the CloudLinux SRPM serie
 per minor. It only reports by default; `--bump` rewrites the pins and re-imports a
 newer series for review. The weekly Action `.github/workflows/check-deps.yml` runs
 `--bump` and opens (or refreshes) one `deps/auto-update` PR. Detection is
-automatic, adoption is a reviewed merge after a host build.
+automatic, adoption is a reviewed merge after a host build. It also **watches**
+Freexian ELTS (below): a new upload shows up in the same PR with the names of the
+new `debian/patches`; `--bump` there only records what was seen.
+
+## Plan B — a second source of backports (Freexian ELTS)
+
+CloudLinux's EA4 source RPMs are public today (el8 and el9; `EA4/10` carries no
+EOL PHP), but nothing obliges them to stay that way, and their newer platforms
+already ship through TuxCare behind a token. So this repo does not depend on
+them alone:
+
+- **Nothing we have is lost.** Every imported patch lives in `patches/<nn>/`; if
+  the EA4 tree closed tomorrow, every build keeps working. Only *new* fixes stop.
+- **Freexian ELTS** (Debian's extended LTS) publishes, in the open, the patched
+  sources for **php5 (5.6), php7.0, php7.3 and php7.4**
+  (`https://deb.freexian.com/extended-lts/pool/main/p/`), one Debian patch per
+  fix, with the same speed (their PHP2SHELL upload is dated 2026-10-21, like
+  CloudLinux's). `elts/{56,70,73}/ELTS` records the upload we last looked at and
+  `elts/<nn>/series` its patch list (its own directory: the CloudLinux importer
+  regenerates `patches/<nn>/` from scratch); `check-deps.py` (check `elts`) reports a new one.
+- **`tools/elts-audit.py`** answers "what does ELTS fix that our tree lacks",
+  without trusting names: it builds our patched tree and dry-runs every ELTS patch
+  whose CVE our series never mentions. **PRESENT** (applies in reverse, already in),
+  **MISSING** (applies forward cleanly), **LOOK** (code differs: read it). With
+  `--from` it checks the minors ELTS does not cover against the nearest one
+  (`--minor 72 --from 73`, `--minor 71 --from 70`, `--minor 53 --from 56`).
+- **If EA4 closes:** keep the last series; take new fixes from ELTS for 5.6/7.0/7.3
+  (the audit says which apply as-is), port them to 7.1/7.2 and 5.3 the same way, and
+  carry them as `patches-local/<nn>/CVE-*.patch` with the usual header. Upstream's
+  own security commits (php-src 8.x branches, GHSA advisories) stay the last resort,
+  as with GH-25089.
+
+The first audit (2026-11-03) already found fixes ELTS carries and the CloudLinux
+series does not, e.g. for 7.3: an OOB read in `php_openssl_matches_wildcard_name()`,
+a heap overflow in the convert stream filters, phar tar entry injection, unbounded
+recursion in SOAP parsing, mysqlnd packet overreads. So ELTS is not only a fallback:
+adopting its MISSING fixes is the next step (its own reviewed change).
 
 ## Status
 

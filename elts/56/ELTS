@@ -1,0 +1,4 @@
+package	php5
+upstream	5.6.
+version	5.6.40+dfsg-0+deb8u23
+pool_url	https://deb.freexian.com/extended-lts/pool/main/p/php5/
