@@ -25,6 +25,13 @@ Checked, each only where this repo pins it:
                    patched something since we last looked; the report lists the
                    new debian/patches names. --bump only records what was seen
                    (elts/<nn>/ELTS + series); nothing is imported or built from it.
+    altphp         WATCH ONLY: newest CloudLinux alt-phpNN SRPM release per
+                   altphp/<nn>/ALTPHP. alt-php is CloudLinux's own build of the
+                   same EOL PHP and has shipped fixes weeks before the ea-php SRPM
+                   we import (CVE-2025-14181/2026-91765, 2026-10). Behind = a new
+                   release; the report lists the CVEs its new %changelog entries
+                   name that our patches do not (read from the RPM header, no
+                   rpm(1) needed). --bump only records the release seen.
 
     ./tools/check-deps.py                  # report (exit 0 current, 3 behind, 2 error)
     ./tools/check-deps.py --bump           # also rewrite pins / re-import series
@@ -37,7 +44,7 @@ same TLS trust the build itself has; the pin then guards every later build.
 Stdlib only (+ the git CLI for tag listing). A check whose pin build.sh doesn't
 carry is skipped.
 """
-import argparse, glob, hashlib, io, os, re, subprocess, sys, tarfile, urllib.parse, urllib.request
+import argparse, glob, hashlib, io, os, re, struct, subprocess, sys, tarfile, urllib.parse, urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -57,7 +64,7 @@ OPENSSL_INDEX = "https://www.openssl.org/source/"
 CURL_INFO = "https://curl.se/info"
 CURL_DOWNLOAD = "https://curl.se/download/"
 SNUFFLEUPAGUS_REPO = "https://github.com/jvoisin/snuffleupagus"
-CHECKS = ("openssl", "curl", "snuffleupagus", "cloudlinux", "elts")
+CHECKS = ("openssl", "curl", "snuffleupagus", "cloudlinux", "elts", "altphp")
 
 
 def _get(url, timeout=60):
@@ -293,6 +300,107 @@ def check_elts():
     return results
 
 
+# ── CloudLinux alt-php (watch only) ───────────────────────────────────────────
+
+def _rpm_changelog(url):
+    """(name, text) of each %changelog entry of an RPM, from its header alone.
+
+    The header sits at the front of the file (lead, signature header, main header),
+    so a 4 MiB Range read is enough and no rpm(1) is needed."""
+    req = urllib.request.Request(url, headers={"User-Agent": "ngm-check-deps", "Range": "bytes=0-4194303"})
+    with urllib.request.urlopen(req, timeout=180) as r:
+        data = r.read()
+
+    def header(off):
+        if data[off:off + 3] != b"\x8e\xad\xe8":
+            raise RuntimeError(f"no RPM header at {off} in {url}")
+        n, size = struct.unpack(">II", data[off + 8:off + 16])
+        idx = off + 16
+        tags = {}
+        for i in range(n):
+            tag, typ, o, cnt = struct.unpack(">IIII", data[idx + 16 * i:idx + 16 * i + 16])
+            tags[tag] = (o, cnt)
+        return tags, idx + 16 * n, idx + 16 * n + size
+
+    _, _, end = header(96)                      # signature header, padded to 8 bytes
+    tags, store, _ = header(end + (-(end - 96) % 8))
+
+    def strings(tag):
+        if tag not in tags:
+            return []
+        o, cnt = tags[tag]
+        o += store
+        out = []
+        for _ in range(cnt):
+            e = data.index(b"\0", o)
+            out.append(data[o:e].decode("utf-8", "replace"))
+            o = e + 1
+        return out
+
+    return list(zip(strings(1081), strings(1082)))   # RPMTAG_CHANGELOGNAME, _TEXT
+
+
+def _our_cves(minor):
+    """CVE ids our series + local patches name for a minor (file names and contents)."""
+    out = set()
+    for d in (os.path.join(ROOT, "patches", minor), os.path.join(ROOT, "patches-local", minor)):
+        for f in os.listdir(d) if os.path.isdir(d) else []:
+            txt = f
+            if f.endswith(".patch") or f in ("series", "MANIFEST.tsv"):
+                txt += open(os.path.join(d, f), encoding="utf-8", errors="replace").read()
+            out |= {c.upper() for c in re.findall(r"CVE-\d{4}-\d+", txt, re.I)}
+    return out
+
+
+def check_altphp():
+    results, listings = [], {}
+    for src in sorted(glob.glob(os.path.join(ROOT, "altphp", "*", "ALTPHP"))):
+        minor = os.path.basename(os.path.dirname(src))
+        f = _read_tsv(src)
+        pkg, seen, base = f.get("package", ""), f.get("release", ""), f.get("srpm_dir", "")
+        label = f"altphp {minor}"
+        m = re.match(r"([0-9.]+)-(\d+)\.(el\d+)$", seen)
+        if not (pkg and m and base):
+            results.append(Result(label, seen or "?", error=f"incomplete {os.path.relpath(src, ROOT)}"))
+            continue
+        ver, rel, el = m.group(1), int(m.group(2)), m.group(3)
+        try:
+            if base not in listings:
+                listings[base] = _get(base, timeout=180).decode("utf-8", "replace")
+        except Exception as e:
+            results.append(Result(label, seen, error=f"listing {base}: {e}"))
+            continue
+        rels = {int(c) for c in re.findall(rf"{re.escape(pkg)}-{re.escape(ver)}-(\d+)\.{el}\.src\.rpm", listings[base])}
+        if not rels:
+            results.append(Result(label, seen, error=f"no {pkg}-{ver}-*.{el}.src.rpm in {base}"))
+            continue
+        newest = max(rels | {rel})
+        r = Result(label, seen, f"{ver}-{newest}.{el}")
+        if r.behind:
+            try:
+                entries = _rpm_changelog(f"{base}{pkg}-{ver}-{newest}.{el}.src.rpm")
+                cves = set()
+                for name, text in entries:
+                    e = re.search(r"-\s*(?:\d+:)?[0-9.]+-(\d+)\s*$", name)
+                    if e and int(e.group(1)) > rel:
+                        cves |= {c.upper() for c in re.findall(r"CVE-\d{4}-\d+", text, re.I)}
+                missing = sorted(cves - _our_cves(minor))
+                r.note = (f"{pkg} moved on (CloudLinux's own build, often ahead of the ea-php SRPM we import). "
+                          f"CVEs in its new changelog entries: {', '.join(sorted(cves)) or 'none'}; "
+                          f"not named in patches/{minor}/ or patches-local/{minor}/: "
+                          + (", ".join(missing) if missing else "none")
+                          + ". Check our tree for those (the code, not the names) and port what is "
+                          f"missing as patches-local/{minor}/CVE-*.patch")
+            except Exception as e:
+                r.note = f"{pkg} has a newer release; could not read its changelog ({e})"
+            if ARGS.bump:
+                txt = open(src, encoding="utf-8").read()
+                open(src, "w", encoding="utf-8").write(re.sub(r"(?m)^release\t.*$", "release\t" + r.latest, txt))
+                r.bumped = True
+        results.append(r)
+    return results
+
+
 # ── report ────────────────────────────────────────────────────────────────────
 
 def markdown(results, build_sh):
@@ -340,6 +448,8 @@ def main():
         results += check_cloudlinux()
     if "elts" in only:
         results += check_elts()
+    if "altphp" in only:
+        results += check_altphp()
 
     for r in results:
         if r.error:

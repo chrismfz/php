@@ -145,7 +145,10 @@ newer series for review. The weekly Action `.github/workflows/check-deps.yml` ru
 `--bump` and opens (or refreshes) one `deps/auto-update` PR. Detection is
 automatic, adoption is a reviewed merge after a host build. It also **watches**
 Freexian ELTS (below): a new upload shows up in the same PR with the names of the
-new `debian/patches`; `--bump` there only records what was seen.
+new `debian/patches`; `--bump` there only records what was seen. The same goes for
+CloudLinux's own **alt-php** builds (`altphp/<nn>/ALTPHP`, check `altphp`): they
+have shipped fixes weeks before the ea-php SRPM we import, so a new alt-php release
+is reported with the CVEs its new changelog entries name that our patches do not.
 
 ## Plan B — a second source of backports (Freexian ELTS)
 
@@ -169,6 +172,13 @@ them alone:
   **MISSING** (applies forward cleanly), **LOOK** (code differs: read it). With
   `--from` it checks the minors ELTS does not cover against the nearest one
   (`--minor 72 --from 73`, `--minor 71 --from 70`, `--minor 53 --from 56`).
+- **CloudLinux alt-php** (`alt-phpNN`, CloudLinux's own build of the same EOL
+  PHP, public SRPMs at `repo.cloudlinux.com/cloudlinux/8/cloudlinux-x86_64-server-8/Source/Packages/`)
+  is a third watch, and a lead rather than a source: its changelog says which CVEs
+  it fixed, often before the ea-php SRPM does (CVE-2025-14181 and CVE-2026-91765
+  reached alt-php53/56/72 in 2026-10, while ea-php still lacked them in 2026-11).
+  `check-deps.py` (check `altphp`) reports a new release and the CVEs it names that
+  our patches do not; we then check our tree and port, as with ELTS.
 - **If EA4 closes:** keep the last series; take new fixes from ELTS for 5.6/7.0/7.3
   (the audit says which apply as-is), port them to 7.1/7.2 and 5.3 the same way, and
   carry them as `patches-local/<nn>/CVE-*.patch` with the usual header. Upstream's
