@@ -1,0 +1,3 @@
+package	alt-php71
+release	7.1.33-114.el8
+srpm_dir	https://repo.cloudlinux.com/cloudlinux/8/cloudlinux-x86_64-server-8/Source/Packages/

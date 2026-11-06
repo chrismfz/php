@@ -1,0 +1,3 @@
+package	alt-php53
+release	5.3.29-220.el8
+srpm_dir	https://repo.cloudlinux.com/cloudlinux/8/cloudlinux-x86_64-server-8/Source/Packages/

@@ -1,6 +1,7 @@
 # Weekly dependency check: runs tools/check-deps.py --bump and, when anything
 # this builder pins is behind upstream (OpenSSL LTS, curl, Snuffleupagus, the
-# CloudLinux SRPM series) or Freexian ELTS has a new upload, opens a PR with the
+# CloudLinux SRPM series) or Freexian ELTS / CloudLinux alt-php has a new
+# upload, opens a PR with the
 # rewritten pins / re-imported patches. Detection is automatic, adoption is not: a human reviews the PR,
 # host-builds and merges. Re-runs force-push the same branch, so there is at
 # most one open PR, always against the latest default branch.
