@@ -131,8 +131,12 @@ run as root.
 ```sh
 git clone https://github.com/chrismfz/php.git && cd php
 sudo ./deploy-cpanel.sh --minor 7.3                    # one minor
-for m in 5.3 5.6 7.0 7.1 7.2 7.3; do sudo ./deploy-cpanel.sh --minor $m; done   # all
+sudo ./deploy-cpanel.sh --minor all                    # all six, one after the other
 ```
+
+With `--minor all`, a failing minor doesn't stop the others. At the end it prints which
+passed and which failed, with one log per minor in `/root/ngm-deploy-logs/`. A minor
+whose package is already installed at the same release is only re-checked, not rebuilt.
 
 For each minor it builds that PHP on the server, packs it into an RPM
 (`dist/cpanel/el9/ngm-php73-7.3.33-1.el9.x86_64.rpm`), installs it with dnf and checks

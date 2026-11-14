@@ -35,6 +35,8 @@ Usage: [PHP_MINOR=X.Y] $0 [--minor X.Y] [--rpm-only|--verify-only]
 
   --minor X.Y    PHP minor to package: 5.3, 5.6, 7.0, 7.1, 7.2 or 7.3 (default 5.6).
                  It is registered with cPanel as ngm-phpNN (e.g. ngm-php73).
+  --minor all    Every minor in turn; one failing does not stop the others, and a
+                 pass/fail table is printed at the end (exit 1 if any failed).
   default        Build locally, create RPM, install/upgrade it, verify cPanel.
   --rpm-only     Build locally and create the RPM without installing it.
   --verify-only  Verify an already-installed ngm-phpNN package.
@@ -45,6 +47,27 @@ USAGE
   esac
   shift
 done
+
+# --minor all: run this script once per minor, keep going on failure, summarise.
+if [ "$PHP_MINOR" = "all" ]; then
+  mode_args=()
+  [ "$MODE" = "rpm-only" ] && mode_args=(--rpm-only)
+  [ "$MODE" = "verify-only" ] && mode_args=(--verify-only)
+  log_dir="${LOG_DIR:-/root/ngm-deploy-logs}"
+  mkdir -p "$log_dir"
+  results=() failed=0
+  for m in 5.3 5.6 7.0 7.1 7.2 7.3; do
+    printf '\033[1;34m==>\033[0m ngm-php%s: %s/ngm-php%s.log\n' "${m//./}" "$log_dir" "${m//./}"
+    if bash "${REPO_DIR}/deploy-cpanel.sh" --minor "$m" "${mode_args[@]}" > "${log_dir}/ngm-php${m//./}.log" 2>&1; then
+      results+=("ngm-php${m//./}  OK")
+    else
+      results+=("ngm-php${m//./}  FAILED (rc $?, see ${log_dir}/ngm-php${m//./}.log)")
+      failed=1
+    fi
+  done
+  echo; printf '%s\n' "${results[@]}"
+  exit "$failed"
+fi
 
 # build.sh is the one source of truth for what a minor is (release, mcrypt).
 # Sourcing it runs nothing (its main is guarded); an unsupported minor exits 2.
@@ -336,6 +359,12 @@ main() {
 
   if [ "$MODE" = "verify-only" ]; then
     rpm -q "$RPM_NAME" >/dev/null 2>&1 || die "${RPM_NAME} is not installed."
+    verify_cpanel
+    return
+  fi
+
+  if [ "$MODE" = "deploy" ] && [ "$(rpm -q --qf '%{VERSION}-%{RELEASE}' "$RPM_NAME" 2>/dev/null)" = "$RPM_NEVR" ]; then
+    log "${RPM_NAME}-${RPM_NEVR} is already installed (bump packaging/cpanel/${PHP_NODOT}/RPM_RELEASE to rebuild); verifying it"
     verify_cpanel
     return
   fi
