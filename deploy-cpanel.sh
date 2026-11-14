@@ -1,11 +1,17 @@
 #!/usr/bin/env bash
-# deploy-cpanel.sh — build, package and register NGM PHP 5.6 as a cPanel vendor SCL.
+# deploy-cpanel.sh — build, package and register one NGM PHP minor as a cPanel
+# vendor SCL, so it shows up in WHM's MultiPHP Manager next to ea-phpNN (cPanel)
+# and alt-phpNN (CloudLinux) as ngm-phpNN:
 #
-# Produces one native RPM for the current EL major release:
-#   ngm-php56-5.6.40-<release>.el9.x86_64.rpm
+#   sudo PHP_MINOR=7.3 ./deploy-cpanel.sh        # or: ./deploy-cpanel.sh --minor 7.3
+#   for m in 5.3 5.6 7.0 7.1 7.2 7.3; do sudo PHP_MINOR=$m ./deploy-cpanel.sh; done
+#
+# Produces one native RPM per minor for the current EL major release, e.g.:
+#   ngm-php73-7.3.33-<release>.el9.x86_64.rpm
 #   ngm-php56-5.6.40-<release>.el10.x86_64.rpm
 #
-# The PHP runtime is compiled locally on the target host using build.sh (PHP_MINOR=5.6).
+# The PHP runtime is compiled locally on the target host using build.sh (same
+# PHP_MINOR); the release, mcrypt and OPcache facts come from build.sh itself.
 # Each RPM release uses an immutable runtime directory; the stable SCL adapter
 # points at that release. This keeps upgrades transactional and preserves the
 # stable cPanel-facing php.ini path.
@@ -13,29 +19,43 @@
 set -Eeuo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PHP_SERIES="5.6"
-PHP_RELEASE="5.6.40"
-SCL_NAME="ngm-php56"
-RPM_NAME="$SCL_NAME"
-RPM_RELEASE_FILE="${REPO_DIR}/packaging/cpanel/56/RPM_RELEASE"
+PHP_MINOR="${PHP_MINOR:-5.6}"
 
 MODE="deploy"
-case "${1:-}" in
-  "") ;;
-  --rpm-only) MODE="rpm-only" ;;
-  --verify-only) MODE="verify-only" ;;
-  -h|--help)
-    cat <<USAGE
-Usage: $0 [--rpm-only|--verify-only]
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --minor) [ $# -ge 2 ] || { printf 'ERROR: --minor needs a value (5.3|5.6|7.0|7.1|7.2|7.3)\n' >&2; exit 2; }
+             PHP_MINOR="$2"; shift ;;
+    --minor=*) PHP_MINOR="${1#--minor=}" ;;
+    --rpm-only) MODE="rpm-only" ;;
+    --verify-only) MODE="verify-only" ;;
+    -h|--help)
+      cat <<USAGE
+Usage: [PHP_MINOR=X.Y] $0 [--minor X.Y] [--rpm-only|--verify-only]
 
+  --minor X.Y    PHP minor to package: 5.3, 5.6, 7.0, 7.1, 7.2 or 7.3 (default 5.6).
+                 It is registered with cPanel as ngm-phpNN (e.g. ngm-php73).
   default        Build locally, create RPM, install/upgrade it, verify cPanel.
   --rpm-only     Build locally and create the RPM without installing it.
-  --verify-only  Verify an already-installed ${SCL_NAME} package.
+  --verify-only  Verify an already-installed ngm-phpNN package.
 USAGE
-    exit 0
-    ;;
-  *) printf 'ERROR: unknown argument: %s\n' "$1" >&2; exit 2 ;;
-esac
+      exit 0
+      ;;
+    *) printf 'ERROR: unknown argument: %s\n' "$1" >&2; exit 2 ;;
+  esac
+  shift
+done
+
+# build.sh is the one source of truth for what a minor is (release, mcrypt).
+# Sourcing it runs nothing (its main is guarded); an unsupported minor exits 2.
+BUILD_FACTS="$(PHP_MINOR="$PHP_MINOR" bash -c 'source "$1/build.sh" >/dev/null && printf "%s %s\n" "$PHP_RELEASE" "$USE_MCRYPT"' _ "$REPO_DIR")" \
+  || { printf 'ERROR: unsupported PHP minor %s (expected 5.3|5.6|7.0|7.1|7.2|7.3)\n' "$PHP_MINOR" >&2; exit 2; }
+read -r PHP_RELEASE USE_MCRYPT <<<"$BUILD_FACTS"
+PHP_SERIES="$PHP_MINOR"
+PHP_NODOT="${PHP_MINOR//./}"
+SCL_NAME="ngm-php${PHP_NODOT}"
+RPM_NAME="$SCL_NAME"
+RPM_RELEASE_FILE="${REPO_DIR}/packaging/cpanel/${PHP_NODOT}/RPM_RELEASE"
 
 log()  { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33mWARN:\033[0m %s\n' "$*" >&2; }
@@ -115,7 +135,7 @@ build_runtime() {
   if rpm -q "$RPM_NAME" >/dev/null 2>&1; then
     installed_nevr="$(rpm -q --qf '%{VERSION}-%{RELEASE}' "$RPM_NAME")"
     if [ "$installed_nevr" = "$RPM_NEVR" ]; then
-      die "${RPM_NAME}-${RPM_NEVR} is already installed. Bump packaging/cpanel/RPM_RELEASE before rebuilding a new package."
+      die "${RPM_NAME}-${RPM_NEVR} is already installed. Bump packaging/cpanel/${PHP_NODOT}/RPM_RELEASE before rebuilding a new package."
     fi
   fi
 
@@ -142,7 +162,7 @@ stage_package() {
   local stage_scl="${STAGE}${SCL_DIR}"
   local stable_etc="${stage_scl}/etc"
   local runtime_etc="${stage_release}/${PHP_SERIES}/etc"
-  local openssl_libdir curl_libdir mcrypt_libdir
+  local openssl_libdir curl_libdir mcrypt_libdir="" lib_path ext_dir_name
   local bin
 
   rm -rf "$STAGE" "$RPM_TOPDIR"
@@ -163,6 +183,8 @@ stage_package() {
   ln -s "$SCL_DIR/etc" "$runtime_etc"
   ln -s "$SCL_DIR/etc" "${stage_scl}/root/etc"
 
+  ext_dir_name="$(basename "$("${PHP_PREFIX}/bin/php-config" --extension-dir)")"
+
   # Rewrite managed Zend extension paths to the stable SCL facade so an RPM
   # upgrade can remove the old immutable release directory safely.
   if [ -f "${stable_etc}/conf.d/00-ioncube.ini" ]; then
@@ -174,7 +196,7 @@ EOF_ION
   if [ -f "${stable_etc}/conf.d/10-opcache.ini" ]; then
     cat > "${stable_etc}/conf.d/10-opcache.ini" <<EOF_OPCACHE
 ; Managed by deploy-cpanel.sh. Load after ionCube.
-zend_extension=${SCL_ROOT}/usr/lib/php/extensions/no-debug-non-zts-20131226/opcache.so
+zend_extension=${SCL_ROOT}/usr/lib/php/extensions/${ext_dir_name}/opcache.so
 EOF_OPCACHE
   fi
 
@@ -194,20 +216,30 @@ EOF_OPCACHE
 
   openssl_libdir="$(find_libdir "${RELEASE_DIR}/openssl-3.5" 'libssl.so.3')" || die "private OpenSSL libdir missing."
   curl_libdir="$(find_libdir "${RELEASE_DIR}/curl-gnutls" 'libcurl.so.4*')" || die "private curl libdir missing."
-  mcrypt_libdir="$(find_libdir "${RELEASE_DIR}/libmcrypt" 'libmcrypt.so*')" || die "private libmcrypt libdir missing."
+  lib_path="${openssl_libdir}:${curl_libdir}"
+  if [ "$USE_MCRYPT" = "1" ]; then
+    mcrypt_libdir="$(find_libdir "${RELEASE_DIR}/libmcrypt" 'libmcrypt.so*')" || die "private libmcrypt libdir missing."
+    lib_path="${lib_path}:${mcrypt_libdir}"
+  fi
 
   cat > "${stage_scl}/enable" <<EOF_ENABLE
 # Generated by ${RPM_NAME} ${PHP_RELEASE}-${RPM_RELEASE}.
 export X_SCLS="${SCL_NAME}\${X_SCLS:+ \${X_SCLS}}"
 export PATH="${SCL_ROOT}/usr/bin:${SCL_ROOT}/usr/sbin\${PATH:+:\${PATH}}"
-export LD_LIBRARY_PATH="${openssl_libdir}:${curl_libdir}:${mcrypt_libdir}\${LD_LIBRARY_PATH:+:\${LD_LIBRARY_PATH}}"
+export LD_LIBRARY_PATH="${lib_path}\${LD_LIBRARY_PATH:+:\${LD_LIBRARY_PATH}}"
 export OPENSSL_CONF="${RELEASE_DIR}/openssl-3.5/openssl.cnf"
 EOF_ENABLE
   chmod 644 "${stage_scl}/enable"
 }
 
 write_spec() {
-  local item rel
+  local item rel php_api zend_abi extras="OPcache"
+  # API numbers straight from the installed headers (php-config has no --phpapi here).
+  php_api="$(awk '/#define PHP_API_VERSION/{print $3}' "${PHP_PREFIX}/include/php/main/php.h")"
+  zend_abi="$(awk '/#define ZEND_MODULE_API_NO/{print $3}' "${PHP_PREFIX}/include/php/Zend/zend_modules.h")"
+  [[ "$php_api" =~ ^[0-9]{8}$ && "$zend_abi" =~ ^[0-9]{8}$ ]] || die "cannot read PHP/Zend API numbers from ${PHP_PREFIX}/include."
+  [ -e "${PHP_PREFIX}/lib/php/extensions/$(basename "$("${PHP_PREFIX}/bin/php-config" --extension-dir)")/opcache.so" ] || extras=""
+  [ "$USE_MCRYPT" = "1" ] && extras="${extras:+${extras}, }libmcrypt"
   cat > "$SPEC_FILE" <<EOF_SPEC
 Name:           ${RPM_NAME}
 Version:        ${PHP_RELEASE}
@@ -216,13 +248,13 @@ Summary:        NGM maintained PHP ${PHP_RELEASE} vendor SCL for cPanel MultiPHP
 License:        PHP-3.01
 URL:            https://github.com/chrismfz/php
 Requires:       scl-utils
-Provides:       ${RPM_NAME}(api) = 20131106
-Provides:       ${RPM_NAME}(zend-abi) = 20131226
+Provides:       ${RPM_NAME}(api) = ${php_api}
+Provides:       ${RPM_NAME}(zend-abi) = ${zend_abi}
 
 %description
 NGM maintained PHP ${PHP_RELEASE} runtime for cPanel MultiPHP. The package is
 built natively on the target EL release and contains PHP, PHP-FPM, CGI, ionCube,
-OPcache, the maintained OpenSSL 3.5 runtime, private GnuTLS libcurl and libmcrypt.
+the maintained OpenSSL 3.5 runtime and a private GnuTLS libcurl${extras:+ (plus ${extras})}.
 
 %prep
 
