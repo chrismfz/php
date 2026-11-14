@@ -644,52 +644,53 @@ build_php() {
     # --with-openssl intentionally has no explicit prefix: PHP then uses
     # pkg-config, which correctly resolves the private OpenSSL lib64 install.
     # --with-mysql only on 5.x (php5_configure): the extension was removed in 7.0.
-    ./configure \
-      --prefix="${PREFIX}" \
-      --exec-prefix="${PREFIX}" \
-      --with-config-file-path="${PREFIX}/etc" \
-      --with-config-file-scan-dir="${PREFIX}/etc/conf.d" \
-      --with-libdir="${PHP_LIBDIR_NAME}" \
-      --enable-fpm \
-      --with-fpm-user="${FPM_USER}" \
-      --with-fpm-group="${FPM_GROUP}" \
-      --with-openssl \
-      --with-zlib \
-      --enable-pdo \
-      "${opcache_configure[@]}" \
-      --enable-mbstring \
-      --enable-bcmath \
-      --enable-calendar \
-      --enable-exif \
-      --enable-ftp \
-      --enable-pcntl \
-      --enable-shmop \
-      --enable-soap \
-      --enable-sockets \
-      --enable-sysvmsg --enable-sysvsem --enable-sysvshm \
-      --enable-zip \
-      --with-bz2 \
-      --with-curl="${CURL_PREFIX}" \
-      --with-gd --with-jpeg-dir=/usr --with-png-dir=/usr --with-freetype-dir=/usr \
-      --with-gettext \
-      --with-gmp \
-      --with-iconv \
-      "${mcrypt_configure[@]}" \
-      --with-mhash \
-      "${php5_configure[@]}" \
-      --with-mysqli=mysqlnd \
-      --with-pdo-mysql=mysqlnd \
-      --with-pgsql \
-      --with-pdo-pgsql \
-      --with-ldap=/usr \
-      --with-ldap-sasl=/usr \
-      --with-tidy=/usr \
-      --with-pspell=/usr \
-      --with-sqlite3=/usr \
-      --with-pdo-sqlite=/usr \
-      --with-readline \
-      --with-xsl \
+    # Everything but the SAPI choice; PHP 5.3 needs it twice (see below).
+    local -a php_configure=(
+      --prefix="${PREFIX}"
+      --exec-prefix="${PREFIX}"
+      --with-config-file-path="${PREFIX}/etc"
+      --with-config-file-scan-dir="${PREFIX}/etc/conf.d"
+      --with-libdir="${PHP_LIBDIR_NAME}"
+      --with-openssl
+      --with-zlib
+      --enable-pdo
+      "${opcache_configure[@]}"
+      --enable-mbstring
+      --enable-bcmath
+      --enable-calendar
+      --enable-exif
+      --enable-ftp
+      --enable-pcntl
+      --enable-shmop
+      --enable-soap
+      --enable-sockets
+      --enable-sysvmsg --enable-sysvsem --enable-sysvshm
+      --enable-zip
+      --with-bz2
+      --with-curl="${CURL_PREFIX}"
+      --with-gd --with-jpeg-dir=/usr --with-png-dir=/usr --with-freetype-dir=/usr
+      --with-gettext
+      --with-gmp
+      --with-iconv
+      "${mcrypt_configure[@]}"
+      --with-mhash
+      "${php5_configure[@]}"
+      --with-mysqli=mysqlnd
+      --with-pdo-mysql=mysqlnd
+      --with-pgsql
+      --with-pdo-pgsql
+      --with-ldap=/usr
+      --with-ldap-sasl=/usr
+      --with-tidy=/usr
+      --with-pspell=/usr
+      --with-sqlite3=/usr
+      --with-pdo-sqlite=/usr
+      --with-readline
+      --with-xsl
       --without-pear
+    )
+    ./configure "${php_configure[@]}" \
+      --enable-fpm --with-fpm-user="${FPM_USER}" --with-fpm-group="${FPM_GROUP}"
 
     log "make -j${JOBS}"
     make -j"$JOBS"
@@ -714,6 +715,19 @@ build_php() {
       elif [ -f sapi/fpm/www.conf ]; then
         cp sapi/fpm/www.conf "${PREFIX}/etc/php-fpm.d/www.conf"
       fi
+    fi
+
+    # PHP 5.3 builds ONE of FPM and CGI (both are PHP_SELECT_SAPI there; 5.4+
+    # builds both), so the run above has no php-cgi. cPanel's CGI/suPHP
+    # handlers need it: a second pass without --enable-fpm builds the default
+    # cgi SAPI from the same tree and flags, and only its binary is installed.
+    if [ "$PHP_MINOR" = "5.3" ]; then
+      log "PHP 5.3: second pass for php-cgi (FPM and CGI are exclusive SAPIs here)"
+      make distclean >/dev/null
+      ./configure "${php_configure[@]}"
+      make -j"$JOBS"
+      [ -x sapi/cgi/php-cgi ] || die "PHP 5.3 CGI pass produced no sapi/cgi/php-cgi."
+      install -m 0755 sapi/cgi/php-cgi "${PREFIX}/bin/php-cgi"
     fi
   popd >/dev/null
 }

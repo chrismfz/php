@@ -263,7 +263,12 @@ write_spec() {
   [[ "$php_api" =~ ^[0-9]{8}$ && "$zend_abi" =~ ^[0-9]{8}$ ]] || die "cannot read PHP/Zend API numbers from ${PHP_PREFIX}/include."
   [ -e "${PHP_PREFIX}/lib/php/extensions/$(basename "$("${PHP_PREFIX}/bin/php-config" --extension-dir)")/opcache.so" ] || extras=""
   [ "$USE_MCRYPT" = "1" ] && extras="${extras:+${extras}, }libmcrypt"
+  # No /usr/lib/.build-id links: every ngm-phpNN carries its own byte-identical
+  # OpenSSL/curl/libmcrypt builds, so their build-id links collide between
+  # packages and dnf refuses the second one ("conflicts with file from package").
   cat > "$SPEC_FILE" <<EOF_SPEC
+%define _build_id_links none
+
 Name:           ${RPM_NAME}
 Version:        ${PHP_RELEASE}
 Release:        ${RPM_RELEASE}%{?dist}
