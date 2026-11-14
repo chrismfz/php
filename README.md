@@ -19,7 +19,8 @@ This repo carries no PHP source, only:
 - **`patches-local/<nn>/`** — our hand-maintained overlay per minor;
 - **`ioncube/`** — the bundled ionCube loaders;
 - **`tools/`** — the deterministic patch importer and `check-deps.py`;
-- **`deploy-cpanel.sh`** — packages 5.6 as a cPanel vendor SCL RPM.
+- **`deploy-cpanel.sh`** — packages any of them as a cPanel vendor SCL RPM
+  (`ngm-phpNN`, shown in WHM's MultiPHP Manager).
 
 The PHP source itself is the **pristine php.net release tarball**, fetched and
 patched at build time — exactly how CloudLinux's own SRPM is shaped, and the only
@@ -51,26 +52,129 @@ FORTIFY. The shared OpenSSL/curl/libmcrypt pick the flags up on their next rebui
 NGM auto-discovers the result at `/opt/ngm/php/<minor>/sbin/php-fpm`; nothing else
 on the host is touched.
 
-## Build
+## Quick start
+
+Two ways to use these builds. Both need an **x86_64** server and **root**. The
+builder installs its own build dependencies, using dnf on EL 8/9/10 or apt on
+Debian/Ubuntu.
+
+| | install where | who finds it |
+|---|---|---|
+| **A. Standalone** (any server, no NGM) | `/opt/ngm/php/<minor>` | you: CLI, PHP-FPM, your web server |
+| **B. cPanel** | an `ngm-phpNN` RPM under `/opt/ngm/ngm-phpNN` | WHM → MultiPHP Manager, next to `ea-phpNN` and `alt-phpNN` |
+
+The prefix is **`ngm-php`** (`ngm-php53` … `ngm-php73`). cPanel's own packages are
+`ea-php`, CloudLinux's are `alt-php`, and ours are `ngm-php`.
+
+### A. Standalone (any EL or Debian server)
 
 ```sh
-# default (7.3 — the easiest, closest to the still-packaged 7.4)
-sudo ./build.sh
-
-# any other minor
-sudo PHP_MINOR=7.2 ./build.sh
-sudo PHP_MINOR=5.6 ./build.sh
-sudo PHP_MINOR=5.3 ./build.sh
+git clone https://github.com/chrismfz/php.git && cd php
+sudo PHP_MINOR=7.3 ./build.sh          # or 5.3 | 5.6 | 7.0 | 7.1 | 7.2 (default 7.3)
 ```
 
-Useful env: `APPLY_PATCHES=0` builds pristine (no security series);
-`FORCE=1` recompiles in place (reusing the cached OpenSSL/curl/toolchain);
-`FORCE_DEPS=1` also rebuilds the shared OpenSSL/curl/libmcrypt;
-`RUN_REGRESSION_TESTS=0` skips the post-build suite;
-`PHP_RELEASE=7.3.33` pins an exact patch release.
+This takes about 10–20 minutes per minor; the first one also builds the private
+OpenSSL and curl. You end up with:
+
+- **CLI:** `/opt/ngm/php/7.3/bin/php -v`.
+- **Config:** `/opt/ngm/php/7.3/etc/php.ini`, plus `etc/conf.d/` for ionCube and OPcache.
+- **PHP-FPM:** `/opt/ngm/php/7.3/sbin/php-fpm`, with `etc/php-fpm.conf` (on 7.x the pool
+  is in `etc/php-fpm.d/www.conf`). The default pool listens on `127.0.0.1:9000`, so
+  give each minor its own port or socket if you run several.
+
+To run FPM as a service, put this unit in `/etc/systemd/system/php73-fpm.service`:
+
+```ini
+[Unit]
+Description=PHP 7.3 FPM (ngm build)
+After=network.target
+
+[Service]
+ExecStart=/opt/ngm/php/7.3/sbin/php-fpm --nodaemonize --fpm-config /opt/ngm/php/7.3/etc/php-fpm.conf
+ExecReload=/bin/kill -USR2 $MAINPID
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```sh
+sudo systemctl daemon-reload && sudo systemctl enable --now php73-fpm
+```
+
+Then point your web server at it (nginx: `fastcgi_pass 127.0.0.1:9000;`; Apache:
+`SetHandler "proxy:fcgi://127.0.0.1:9000"`). **NGM** needs none of this: it finds
+`/opt/ngm/php/<minor>/sbin/php-fpm` on its own and runs it per customer.
+
+**Updating** (new security patches): `git pull`, then `sudo FORCE=1 PHP_MINOR=7.3 ./build.sh`,
+then restart FPM.
+
+Useful env:
+
+| variable | effect |
+|---|---|
+| `APPLY_PATCHES=0` | builds pristine, without the security series |
+| `FORCE=1` | recompiles in place, reusing the cached OpenSSL, curl and toolchain |
+| `FORCE_DEPS=1` | also rebuilds the shared OpenSSL, curl and libmcrypt |
+| `RUN_REGRESSION_TESTS=0` | skips the post-build suite |
+| `PHP_RELEASE=7.3.33` | pins an exact patch release |
+| `ENABLE_IONCUBE=0` | leaves out ionCube |
 
 The default patch releases are the last of each line: **5.3.29, 5.6.40, 7.0.33, 7.1.33,
 7.2.34, 7.3.33.**
+
+### B. cPanel & WHM (MultiPHP Manager)
+
+Requirements: cPanel & WHM on **EL 9 or EL 10** x86_64 (AlmaLinux, Rocky, CloudLinux),
+run as root.
+
+```sh
+git clone https://github.com/chrismfz/php.git && cd php
+sudo ./deploy-cpanel.sh --minor 7.3                    # one minor
+sudo ./deploy-cpanel.sh --minor all                    # all six, one after the other
+```
+
+With `--minor all`, a failing minor doesn't stop the others. At the end it prints which
+passed and which failed, with one log per minor in `/root/ngm-deploy-logs/`. A minor
+whose package is already installed at the same release is only re-checked, not rebuilt.
+
+For each minor it builds that PHP on the server, packs it into an RPM
+(`dist/cpanel/el9/ngm-php73-7.3.33-1.el9.x86_64.rpm`), installs it with dnf and checks
+that cPanel sees it. The RPM includes the private OpenSSL, curl, ionCube and OPcache,
+so it doesn't touch `ea-php`, `alt-php` or the system libraries.
+
+Then go to **WHM → Software → MultiPHP Manager**. `ngm-php73` (and the others) appear
+in the PHP version list, and you set it per domain or as the system default, like any
+`ea-phpNN`. The handlers cPanel offers for each one are printed at the end of the
+deploy: `/usr/local/cpanel/bin/rebuild_phpconf --available`.
+
+| task | how |
+|---|---|
+| check an installed one | `sudo ./deploy-cpanel.sh --minor 7.3 --verify-only` |
+| only make the RPM (e.g. to copy to other servers of the same EL) | `--rpm-only` |
+| update after `git pull` | raise the number in `packaging/cpanel/73/RPM_RELEASE`, then run the deploy again; dnf upgrades it in place and keeps the `php.ini` |
+| remove | first move the domains to another PHP in MultiPHP Manager, then `sudo dnf remove ngm-php73` |
+
+**Later: automatic updates on cPanel** (not built yet). The pieces are already there:
+
+- Every build leaves its stamp in the RPM at
+  `/opt/ngm/cpanel/ngm-phpNN/releases/<rel>/<minor>/ngm-build`. Its `inputs_tree` is the
+  hash of `build.sh` + `patches/<nn>` + `patches-local/<nn>` + the ionCube loader, the
+  same signal ngm uses for "update available".
+- So a `deploy-cpanel.sh --update [--minor all]` would:
+  1. `git pull`;
+  2. recompute that hash for each installed `ngm-phpNN` and compare it with the stamp;
+  3. rebuild only the minors that changed;
+  4. upgrade the RPM in place (dnf keeps `php.ini`).
+- Two things are needed for it:
+  - an RPM release that rises on its own, e.g. derived from the git commit count, instead
+    of the hand-bumped `packaging/cpanel/<nn>/RPM_RELEASE`;
+  - a weekly cron or systemd timer to run it.
+
+**Later: one shared deps package.** Today each `ngm-phpNN` RPM builds and carries its own
+OpenSSL 3.5, curl and libmcrypt. That makes it self-contained, but slow (about 15–20 min
+per minor). A single `ngm-php-deps` RPM, required by every `ngm-phpNN`, would build them
+once, the same way `/opt/ngm/php/` shares them outside cPanel.
 
 ## Our own patches (`patches-local/<nn>/*.patch`)
 
