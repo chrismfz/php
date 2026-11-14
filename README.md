@@ -155,6 +155,22 @@ deploy: `/usr/local/cpanel/bin/rebuild_phpconf --available`.
 | update after `git pull` | raise the number in `packaging/cpanel/73/RPM_RELEASE`, then run the deploy again; dnf upgrades it in place and keeps the `php.ini` |
 | remove | first move the domains to another PHP in MultiPHP Manager, then `sudo dnf remove ngm-php73` |
 
+**Later: automatic updates on cPanel** (not built yet). The pieces are already there:
+
+- Every build leaves its stamp in the RPM at
+  `/opt/ngm/cpanel/ngm-phpNN/releases/<rel>/<minor>/ngm-build`. Its `inputs_tree` is the
+  hash of `build.sh` + `patches/<nn>` + `patches-local/<nn>` + the ionCube loader, the
+  same signal ngm uses for "update available".
+- So a `deploy-cpanel.sh --update [--minor all]` would:
+  1. `git pull`;
+  2. recompute that hash for each installed `ngm-phpNN` and compare it with the stamp;
+  3. rebuild only the minors that changed;
+  4. upgrade the RPM in place (dnf keeps `php.ini`).
+- Two things are needed for it:
+  - an RPM release that rises on its own, e.g. derived from the git commit count, instead
+    of the hand-bumped `packaging/cpanel/<nn>/RPM_RELEASE`;
+  - a weekly cron or systemd timer to run it.
+
 ## Our own patches (`patches-local/<nn>/*.patch`)
 
 Anything WE change in PHP's source — a backport CloudLinux doesn't ship (yet), a
