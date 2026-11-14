@@ -362,8 +362,14 @@ build_openssl() {
   tar -xzf "$tarball" -C "$BUILD_ROOT"
 
   pushd "${BUILD_ROOT}/openssl-${OPENSSL_VERSION}" >/dev/null
-    local openssl_perl5lib
-    openssl_perl5lib="${PWD}/util/perl:${PWD}/external/perl/Text-Template-1.56/lib"
+    local openssl_perl5lib core_perl_inc
+    # perl's own vendor/core module dirs go ahead of site_perl: a stray
+    # site-installed module can shadow the core one. A 2004 File::Spec 0.9 in
+    # /usr/local/lib64/perl5 (found on a cPanel host) returns "" from abs2rel()
+    # for identical paths, which leaves OpenSSL's sourcedir empty and Configure
+    # fails ("Can't locate gentemplate.pm ... @INC contains: /Configurations").
+    core_perl_inc="$(perl -MConfig -e 'print join ":", grep { defined && length } @Config{qw(vendorarchexp vendorlibexp archlibexp privlibexp)}')"
+    openssl_perl5lib="${PWD}/util/perl:${PWD}/external/perl/Text-Template-1.56/lib${core_perl_inc:+:${core_perl_inc}}"
     [ -r "${PWD}/util/perl/OpenSSL/fallback.pm" ] || die "OpenSSL bundled Perl fallback module is missing."
     [ -r "${PWD}/external/perl/Text-Template-1.56/lib/Text/Template.pm" ] || die "OpenSSL bundled Text::Template module is missing."
 
