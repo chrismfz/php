@@ -171,6 +171,11 @@ deploy: `/usr/local/cpanel/bin/rebuild_phpconf --available`.
     of the hand-bumped `packaging/cpanel/<nn>/RPM_RELEASE`;
   - a weekly cron or systemd timer to run it.
 
+**Later: one shared deps package.** Today each `ngm-phpNN` RPM builds and carries its own
+OpenSSL 3.5, curl and libmcrypt. That makes it self-contained, but slow (about 15–20 min
+per minor). A single `ngm-php-deps` RPM, required by every `ngm-phpNN`, would build them
+once, the same way `/opt/ngm/php/` shares them outside cPanel.
+
 ## Our own patches (`patches-local/<nn>/*.patch`)
 
 Anything WE change in PHP's source — a backport CloudLinux doesn't ship (yet), a
