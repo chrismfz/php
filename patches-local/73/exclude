@@ -8,3 +8,8 @@
 # only the no-op deletion is dropped. CVE-2017-8923 / CVE-2024-11236 depend on the
 # ZSTR_MAX_LEN definition, so it must stay defined.
 php-7.3-CVE-2017-9118.patch
+
+# CVE-2025-1218 (CloudLinux caching_sha2 add-on): its php_mysqlnd_cached_sha2_result_read()
+# hunks target alt-php's own caching_sha2 backport; our base has no such function, so
+# they reject. The main CVE-2025-1218 patch applies and stays.
+php-7.3-CVE-2025-1218-caching-sha2.patch

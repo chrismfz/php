@@ -5,3 +5,9 @@
 # so it rejects. Kept via patches-local/72/php-7.3-CVE-2017-9118.patch (adds
 # ZSTR_MAX_OVERHEAD + ZSTR_MAX_LEN, plus both ext/pcre hunks). Other CVEs use it.
 php-7.3-CVE-2017-9118.patch
+
+# CVE-2025-1218 (CloudLinux form): its php_mysqlnd_cached_sha2_result_read()
+# hunks target alt-php's own caching_sha2 backport; our base has no such function, so
+# they reject. Kept as patches-local/72/CVE-2025-1218.patch (the same fix without those hunks).
+# Delete when: CloudLinux drops those hunks for this minor.
+php-7.2-CVE-2025-1218.patch

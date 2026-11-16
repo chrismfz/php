@@ -1,0 +1,7 @@
+# Series entries skipped on this base, with reasons (importer never touches this).
+
+# CVE-2025-1218 (CloudLinux form): its php_mysqlnd_cached_sha2_result_read()
+# hunks target alt-php's own caching_sha2 backport; our base has no such function, so
+# they reject. Kept as patches-local/56/CVE-2025-1218.patch (the same fix without those hunks).
+# Delete when: CloudLinux drops those hunks for this minor.
+php-5.6-CVE-2025-1218.patch
