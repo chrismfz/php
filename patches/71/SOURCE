@@ -1,4 +1,4 @@
-srpm_filename	ea-php71-php-7.1.33-20.el8.cloudlinux.17.src.rpm
-srpm_sha256	d59f0b68bdb004d941c5e096f4a09adb80feecbb4bb711113e6d5ea347265e9f
-srpm_release	20.el8.cloudlinux.17
-source_url	https://repo.cloudlinux.com/cloudlinux/EA4/8.1/updates/src/ea-php71-php-7.1.33-20.el8.cloudlinux.17.src.rpm
+srpm_filename	ea-php71-php-7.1.33-20.el8.cloudlinux.18.src.rpm
+srpm_sha256	ce39cc6287c03bb43bf47e5021cc40ad6092a73caaeb9070f93a6bf5717b4fe0
+srpm_release	20.el8.cloudlinux.18
+source_url	https://repo.cloudlinux.com/cloudlinux/EA4/8.1/updates/src/ea-php71-php-7.1.33-20.el8.cloudlinux.18.src.rpm
