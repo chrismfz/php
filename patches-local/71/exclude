@@ -1,3 +1,9 @@
 # CVE-2017-9118: 2nd zend_string.h hunk deletes an old ZSTR_MAX_LEN absent from
 # pristine 7.1.33. Kept (rebased) in patches-local/71/php-7.1-CVE-2017-9118.patch.
 php-7.1-CVE-2017-9118.patch
+
+# CVE-2025-1218 (CloudLinux form): its php_mysqlnd_cached_sha2_result_read()
+# hunks target alt-php's own caching_sha2 backport; our base has no such function, so
+# they reject. Kept as patches-local/71/CVE-2025-1218.patch (the same fix without those hunks).
+# Delete when: CloudLinux drops those hunks for this minor.
+php-7.1-CVE-2025-1218.patch
