@@ -360,7 +360,7 @@ install_rpm() {
 }
 
 verify_cpanel() {
-  local versions available
+  local versions available lsphp_v
   command -v scl >/dev/null 2>&1 || die "scl utility is unavailable."
   scl --list 2>/dev/null | grep -Fxq "$SCL_NAME" || die "${SCL_NAME} is not registered with SCL."
 
@@ -378,7 +378,12 @@ verify_cpanel() {
   grep -E "^${SCL_NAME}:" <<<"$available"
 
   log "testing lsphp"
-  "${SCL_ROOT}/usr/bin/lsphp" -v | sed -n '1p'
+  # The banner, not the exit code: 5.3's lsphp exits 1 after -v.
+  lsphp_v="$("${SCL_ROOT}/usr/bin/lsphp" -v 2>/dev/null | sed -n '1p' || true)"
+  case "$lsphp_v" in
+    "PHP ${PHP_RELEASE} (litespeed)"*) printf '%s\n' "$lsphp_v" ;;
+    *) die "lsphp reports '${lsphp_v:-nothing}', expected PHP ${PHP_RELEASE} (litespeed)." ;;
+  esac
   if [ -f /etc/container/php.handler ]; then
     grep -q "^application/x-httpd-${SCL_NAME}___lsphp ${SCL_ROOT}/usr/bin/lsphp\$" /etc/container/php.handler \
       || die "mod_lsapi is installed but /etc/container/php.handler has no ${SCL_NAME} line (reinstall ${RPM_NAME})."

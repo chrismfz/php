@@ -953,7 +953,8 @@ verify() {
   if [ "$ENABLE_LSPHP" = "1" ]; then
     local lsphp_bin="${PREFIX}/bin/lsphp" lsphp_v
     [ -x "$lsphp_bin" ] || die "ENABLE_LSPHP=1 but ${lsphp_bin} is missing."
-    lsphp_v="$("$lsphp_bin" -v 2>/dev/null | sed -n '1p')"
+    # 5.3's lsapi_main exits 1 after -v, so judge the banner, not the exit code.
+    lsphp_v="$("$lsphp_bin" -v 2>/dev/null | sed -n '1p' || true)"
     case "$lsphp_v" in
       "PHP ${PHP_RELEASE} (litespeed)"*) log "lsphp: ${lsphp_v}" ;;
       *) die "lsphp reports '${lsphp_v:-nothing}', expected PHP ${PHP_RELEASE} (litespeed)." ;;
