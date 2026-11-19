@@ -1,4 +1,4 @@
-srpm_filename	ea-php53-php-5.3.29-29.el8.cloudlinux.70.src.rpm
-srpm_sha256	5c1459100ac2ef16d49bf522598b02d17e5421394d2f1d57b4c21116a8860801
-srpm_release	29.el8.cloudlinux.70
-source_url	https://repo.cloudlinux.com/cloudlinux/EA4/8.1/updates/src/ea-php53-php-5.3.29-29.el8.cloudlinux.70.src.rpm
+srpm_filename	ea-php53-php-5.3.29-29.el8.cloudlinux.71.src.rpm
+srpm_sha256	d9099a5b5be90c683eaa7f2f8323446aff07b1cb57ffc7fa79e1a01813532fe9
+srpm_release	29.el8.cloudlinux.71
+source_url	https://repo.cloudlinux.com/cloudlinux/EA4/8.1/updates/src/ea-php53-php-5.3.29-29.el8.cloudlinux.71.src.rpm

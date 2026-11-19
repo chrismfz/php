@@ -1,4 +1,4 @@
-srpm_filename	ea-php73-php-7.3.33-15.el8.cloudlinux.19.src.rpm
-srpm_sha256	1ccd6f1edbc2a37c712da7b1d2d78d45a885ac9c050d29551b5e82224dfb6f5f
-srpm_release	15.el8.cloudlinux.19
-source_url	https://repo.cloudlinux.com/cloudlinux/EA4/8.1/updates/src/ea-php73-php-7.3.33-15.el8.cloudlinux.19.src.rpm
+srpm_filename	ea-php73-php-7.3.33-15.el8.cloudlinux.20.src.rpm
+srpm_sha256	eac5737b34ed7dc67a0ca2f0132825aa0bad167e825ffd97017a60e0f3820d83
+srpm_release	15.el8.cloudlinux.20
+source_url	https://repo.cloudlinux.com/cloudlinux/EA4/8.1/updates/src/ea-php73-php-7.3.33-15.el8.cloudlinux.20.src.rpm

@@ -139,3 +139,15 @@ GHSA-ch8v-r6jh-4vvr.patch
 0139-http-Fix-out-of-bounds-read-on-empty-Location-header.patch
 0140-ext-standard-Fix-1-char-relative-Location-redirects-.patch
 CVE-2026-109618_CVE-2026-109619.patch
+CVE-2026-15353.patch
+CVE-2026-128090.patch
+CVE-2026-129538.patch
+CVE-2026-129292.patch
+CVE-2026-129289.patch
+CVE-2026-129506.patch
+CVE-2026-129496.patch
+CVE-2026-126714.patch
+CVE-2026-115560.patch
+CVE-2026-128064.patch
+CVE-2026-127960.patch
+CVE-2026-129291.patch
