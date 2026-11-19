@@ -119,7 +119,6 @@ Useful env:
 | `RUN_REGRESSION_TESTS=0` | skips the post-build suite |
 | `PHP_RELEASE=7.3.33` | pins an exact patch release |
 | `ENABLE_IONCUBE=0` | leaves out ionCube |
-| `ENABLE_LSPHP=1` | also builds `bin/lsphp`, the LiteSpeed SAPI, for LiteSpeed or CloudLinux `mod_lsapi` (off by default; NGM uses FPM) |
 
 The default patch releases are the last of each line: **5.3.29, 5.6.40, 7.0.33, 7.1.33,
 7.2.34, 7.3.33.**
@@ -140,14 +139,9 @@ passed and which failed, with one log per minor in `/root/ngm-deploy-logs/`. A m
 whose package is already installed at the same release is only re-checked, not rebuilt.
 
 For each minor it builds that PHP on the server, packs it into an RPM
-(`dist/cpanel/el9/ngm-php73-7.3.33-2.el9.x86_64.rpm`), installs it with dnf and checks
+(`dist/cpanel/el9/ngm-php73-7.3.33-1.el9.x86_64.rpm`), installs it with dnf and checks
 that cPanel sees it. The RPM includes the private OpenSSL, curl, ionCube and OPcache,
 so it doesn't touch `ea-php`, `alt-php` or the system libraries.
-
-It ships `php-cgi`, `php-fpm` and `lsphp`, so all the handlers cPanel offers work: CGI,
-suPHP, PHP-FPM and **lsapi**. With CloudLinux `mod_lsapi`, the RPM also registers the
-version in `/etc/container/php.handler`, so picking *lsapi* in MultiPHP Manager works with
-no extra step. It drops that line again on `dnf remove`.
 
 Then go to **WHM → Software → MultiPHP Manager**. `ngm-php73` (and the others) appear
 in the PHP version list, and you set it per domain or as the system default, like any

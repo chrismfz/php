@@ -172,14 +172,12 @@ build_runtime() {
   FORCE=1 \
   FORCE_DEPS=1 \
   RUN_REGRESSION_TESTS=1 \
-  ENABLE_LSPHP=1 \
   PHP_MINOR="$PHP_SERIES" \
     bash "${REPO_DIR}/build.sh"
 
   [ -x "${PHP_PREFIX}/bin/php" ] || die "built PHP CLI missing."
   [ -x "${PHP_PREFIX}/bin/php-cgi" ] || die "built php-cgi missing; cPanel CGI/suPHP discovery requires it."
   [ -x "${PHP_PREFIX}/sbin/php-fpm" ] || die "built php-fpm missing."
-  [ -x "${PHP_PREFIX}/bin/lsphp" ] || die "built lsphp missing; cPanel's lsapi handler (mod_lsapi / LiteSpeed) needs it."
 }
 
 stage_package() {
@@ -227,7 +225,7 @@ EOF_OPCACHE
 
   printf '%s\n' "$CPANEL_VENDOR_ROOT" > "${STAGE}/etc/scl/prefixes/${SCL_NAME}"
 
-  for bin in php php-cgi lsphp php-config phpize phar phar.phar; do
+  for bin in php php-cgi php-config phpize phar phar.phar; do
     if [ -e "${PHP_PREFIX}/bin/${bin}" ]; then
       ln -s "${PHP_PREFIX}/bin/${bin}" "${stage_scl}/root/usr/bin/${bin}"
     fi
@@ -268,13 +266,6 @@ write_spec() {
   # No /usr/lib/.build-id links: every ngm-phpNN carries its own byte-identical
   # OpenSSL/curl/libmcrypt builds, so their build-id links collide between
   # packages and dnf refuses the second one ("conflicts with file from package").
-  #
-  # cPanel offers the "lsapi" handler for every PHP once mod_lsapi is installed,
-  # and names it application/x-httpd-<pkg>___lsphp. mod_lsapi finds the binary for
-  # that name in /etc/container/php.handler (CloudLinux fills in ea-/alt-php only),
-  # so %post adds our line there and %postun drops it on erase. No mod_lsapi: no file.
-  local handler_file=/etc/container/php.handler
-  local handler_line="application/x-httpd-${SCL_NAME}___lsphp ${SCL_ROOT}/usr/bin/lsphp"
   cat > "$SPEC_FILE" <<EOF_SPEC
 %define _build_id_links none
 
@@ -290,7 +281,7 @@ Provides:       ${RPM_NAME}(zend-abi) = ${zend_abi}
 
 %description
 NGM maintained PHP ${PHP_RELEASE} runtime for cPanel MultiPHP. The package is
-built natively on the target EL release and contains PHP, PHP-FPM, CGI, lsphp, ionCube,
+built natively on the target EL release and contains PHP, PHP-FPM, CGI, ionCube,
 the maintained OpenSSL 3.5 runtime and a private GnuTLS libcurl${extras:+ (plus ${extras})}.
 
 %prep
@@ -301,17 +292,6 @@ the maintained OpenSSL 3.5 runtime and a private GnuTLS libcurl${extras:+ (plus 
 rm -rf %{buildroot}
 mkdir -p %{buildroot}
 cp -a ${STAGE}/. %{buildroot}/
-
-%post
-if [ -f ${handler_file} ] && ! grep -qxF '${handler_line}' ${handler_file}; then
-  [ -z "\$(tail -c1 ${handler_file})" ] || echo >> ${handler_file}
-  echo '${handler_line}' >> ${handler_file}
-fi
-
-%postun
-if [ "\$1" = 0 ] && [ -f ${handler_file} ]; then
-  sed -i '\\|^application/x-httpd-${SCL_NAME}___lsphp |d' ${handler_file}
-fi
 
 %files
 %defattr(-,root,root,-)
@@ -360,7 +340,7 @@ install_rpm() {
 }
 
 verify_cpanel() {
-  local versions available lsphp_v
+  local versions available
   command -v scl >/dev/null 2>&1 || die "scl utility is unavailable."
   scl --list 2>/dev/null | grep -Fxq "$SCL_NAME" || die "${SCL_NAME} is not registered with SCL."
 
@@ -376,19 +356,6 @@ verify_cpanel() {
 
   log "cPanel handler discovery:"
   grep -E "^${SCL_NAME}:" <<<"$available"
-
-  log "testing lsphp"
-  # The banner, not the exit code: 5.3's lsphp exits 1 after -v.
-  lsphp_v="$("${SCL_ROOT}/usr/bin/lsphp" -v 2>/dev/null | sed -n '1p' || true)"
-  case "$lsphp_v" in
-    "PHP ${PHP_RELEASE} (litespeed)"*) printf '%s\n' "$lsphp_v" ;;
-    *) die "lsphp reports '${lsphp_v:-nothing}', expected PHP ${PHP_RELEASE} (litespeed)." ;;
-  esac
-  if [ -f /etc/container/php.handler ]; then
-    grep -q "^application/x-httpd-${SCL_NAME}___lsphp ${SCL_ROOT}/usr/bin/lsphp\$" /etc/container/php.handler \
-      || die "mod_lsapi is installed but /etc/container/php.handler has no ${SCL_NAME} line (reinstall ${RPM_NAME})."
-    log "mod_lsapi: ${SCL_NAME} registered in /etc/container/php.handler"
-  fi
   log "${SCL_NAME} cPanel vendor-SCL verification passed"
 }
 

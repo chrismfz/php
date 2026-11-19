@@ -31,7 +31,6 @@
 #   RUNTIME_ONLY=1              only (re)provision runtime config + verify/test
 #   ENABLE_LEGACY_PROVIDER=0    disable the private OpenSSL legacy provider
 #   ENABLE_IONCUBE=0            skip the bundled ionCube loader
-#   ENABLE_LSPHP=1              also build lsphp, the LiteSpeed SAPI (mod_lsapi / LiteSpeed; off by default)
 #   ENABLE_SNUFFLEUPAGUS=1      build + install the Snuffleupagus hardening module (PHP 7.0+; off by default)
 #   SNUFFLEUPAGUS_VERSION=X.Y.Z Snuffleupagus git tag to build (default 0.14.0)
 #   PHP_LIBDIR_NAME=...         override the configure system library dir
@@ -114,9 +113,6 @@ FORCE_DEPS="${FORCE_DEPS:-0}"
 RUN_REGRESSION_TESTS="${RUN_REGRESSION_TESTS:-1}"
 ENABLE_LEGACY_PROVIDER="${ENABLE_LEGACY_PROVIDER:-1}"
 ENABLE_IONCUBE="${ENABLE_IONCUBE:-1}"
-# lsphp (sapi/litespeed) is for LiteSpeed / CloudLinux mod_lsapi hosts; NGM's own
-# nginx + FPM never runs it, so it is off unless asked (deploy-cpanel.sh turns it on).
-ENABLE_LSPHP="${ENABLE_LSPHP:-0}"
 RUNTIME_ONLY="${RUNTIME_ONLY:-0}"
 APPLY_PATCHES="${APPLY_PATCHES:-1}"   # apply patches/<minor>/series; 0 = pristine build
 PHP_LIBDIR_NAME="${PHP_LIBDIR_NAME:-}"
@@ -611,7 +607,7 @@ apply_patches() {
 
 build_php() {
   local openssl_libdir curl_libdir mcrypt_libdir openssl_pc_prefix
-  local -a mcrypt_configure=() php5_configure=() opcache_configure=() lsphp_configure=()
+  local -a mcrypt_configure=() php5_configure=() opcache_configure=()
 
   if [ -x "${PREFIX}/sbin/php-fpm" ] && [ "$FORCE" != "1" ]; then
     die "PHP ${PHP_SERIES} already exists at ${PREFIX}/sbin/php-fpm (use FORCE=1 to rebuild)."
@@ -637,9 +633,6 @@ build_php() {
   fi
   [ "$PHP5" = "1" ] && php5_configure=("--with-mysql=mysqlnd")
   [ "$USE_OPCACHE" = "1" ] && opcache_configure=("--enable-opcache")
-  # 5.6+ builds every program SAPI it is asked for in one run, so lsphp rides the
-  # FPM pass; 5.3 builds only one and gets its own pass below.
-  [ "$ENABLE_LSPHP" = "1" ] && [ "$PHP_MINOR" != "5.3" ] && lsphp_configure=("--with-litespeed")
 
   pkg-config --exists openssl || die "private OpenSSL pkg-config metadata not found."
   openssl_pc_prefix="$(pkg-config --variable=prefix openssl)"
@@ -696,16 +689,12 @@ build_php() {
       --with-xsl
       --without-pear
     )
-    ./configure "${php_configure[@]}" "${lsphp_configure[@]}" \
+    ./configure "${php_configure[@]}" \
       --enable-fpm --with-fpm-user="${FPM_USER}" --with-fpm-group="${FPM_GROUP}"
 
     log "make -j${JOBS}"
     make -j"$JOBS"
     make install
-    if [ "${#lsphp_configure[@]}" -gt 0 ]; then
-      [ -x sapi/litespeed/php ] || die "--with-litespeed produced no sapi/litespeed/php."
-      install -m 0755 sapi/litespeed/php "${PREFIX}/bin/lsphp"
-    fi
 
     install -d "${PREFIX}/etc" "${PREFIX}/etc/conf.d"
     if [ ! -f "${PREFIX}/etc/php.ini" ]; then
@@ -739,16 +728,6 @@ build_php() {
       make -j"$JOBS"
       [ -x sapi/cgi/php-cgi ] || die "PHP 5.3 CGI pass produced no sapi/cgi/php-cgi."
       install -m 0755 sapi/cgi/php-cgi "${PREFIX}/bin/php-cgi"
-
-      # Same story for lsphp: one more pass, only its binary is installed.
-      if [ "$ENABLE_LSPHP" = "1" ]; then
-        log "PHP 5.3: third pass for lsphp (LiteSpeed SAPI)"
-        make distclean >/dev/null
-        ./configure "${php_configure[@]}" --with-litespeed
-        make -j"$JOBS"
-        [ -x sapi/litespeed/php ] || die "PHP 5.3 LiteSpeed pass produced no sapi/litespeed/php."
-        install -m 0755 sapi/litespeed/php "${PREFIX}/bin/lsphp"
-      fi
     fi
   popd >/dev/null
 }
@@ -949,19 +928,6 @@ verify() {
     if ($d === false) { fwrite(STDERR,curl_error($c)."\n"); exit(1); }
     curl_close($c);
   '
-
-  if [ "$ENABLE_LSPHP" = "1" ]; then
-    local lsphp_bin="${PREFIX}/bin/lsphp" lsphp_v
-    [ -x "$lsphp_bin" ] || die "ENABLE_LSPHP=1 but ${lsphp_bin} is missing."
-    # 5.3's lsapi_main exits 1 after -v, so judge the banner, not the exit code.
-    lsphp_v="$("$lsphp_bin" -v 2>/dev/null | sed -n '1p' || true)"
-    case "$lsphp_v" in
-      "PHP ${PHP_RELEASE} (litespeed)"*) log "lsphp: ${lsphp_v}" ;;
-      *) die "lsphp reports '${lsphp_v:-nothing}', expected PHP ${PHP_RELEASE} (litespeed)." ;;
-    esac
-    ldd "$lsphp_bin" 2>/dev/null | grep -F "libssl.so.3 => ${openssl_libdir}/" >/dev/null \
-      || die "lsphp is not loading private libssl.so.3 from ${openssl_libdir}."
-  fi
 
   if [ -f "${PREFIX}/etc/php-fpm.conf" ]; then
     log "testing FPM configuration"
