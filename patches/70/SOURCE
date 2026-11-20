@@ -1,4 +1,4 @@
-srpm_filename	ea-php70-php-7.0.33-29.el8.cloudlinux.18.src.rpm
-srpm_sha256	dceb8679ff38e76001e031abda94c22409c5305f3506b38b12e89a0474c97b7d
-srpm_release	29.el8.cloudlinux.18
-source_url	https://repo.cloudlinux.com/cloudlinux/EA4/8.1/updates/src/ea-php70-php-7.0.33-29.el8.cloudlinux.18.src.rpm
+srpm_filename	ea-php70-php-7.0.33-29.el8.cloudlinux.19.src.rpm
+srpm_sha256	a2e1cac3a71ebc24a436c7ef03a2a5db9ed3c6328f0068cc9590172a9798b955
+srpm_release	29.el8.cloudlinux.19
+source_url	https://repo.cloudlinux.com/cloudlinux/EA4/8.1/updates/src/ea-php70-php-7.0.33-29.el8.cloudlinux.19.src.rpm

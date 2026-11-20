@@ -330,3 +330,15 @@ php-5.3-CVE-2026-91765.patch -p1
 php-5.3-CVE-2026-91766.patch -p1
 php-5.3-CVE-2026-93682.patch -p1
 php-5.3-CVE-2025-1218.patch -p1
+php-5.3-CVE-2026-126714.patch -p1
+php-5.3-CVE-2026-129289.patch -p1
+php-5.3-CVE-2026-129291.patch -p1
+php-5.3-CVE-2026-129496.patch -p1
+php-5.3-CVE-2026-129506.patch -p1
+php-5.3-CVE-2026-129538.patch -p1
+php-5.3-CVE-2026-15353.patch -p1
+php-5.3-CVE-2026-127960.patch -p1
+php-5.3-CVE-2026-128064.patch -p1
+php-5.3-CVE-2026-128090.patch -p1
+php-5.3-CVE-2026-129292.patch -p1
+php-5.3-CVE-2026-129481.patch -p1
